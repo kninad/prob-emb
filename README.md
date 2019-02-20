@@ -19,3 +19,11 @@ non-euclidean techniques for hierarchical embeddings [2, 3].
 [2] Poincaré Embeddings for Learning Hierarchical Representations. (NIPS 2017)
 
 [3] Learning Continous Hierarchies in the Lorentz Model of Hyperbolic Geomentry. (ICML 2018)
+
+----
+
+## Requirements
+
+- Python 3.6
+- PyTorch (hyperb-emb) and Tensorflow (prob-box-emb)
+
