@@ -137,14 +137,23 @@ def run_training():
                 print('Epoch %d: kb_loss = %.5f (%.3f sec)' % (train_data._epochs_completed, loss_value, duration))
                 print('Conditional loss: %.5f, Marginal loss: %.5f , Regularization loss: %.5f' % (cond_loss, marg_loss, reg_loss))
                 print('Training Stats:', end='')
-                # train_acc = evaluater.accuracy_eval(sess, eval_neg_prob, placeholder, train_test_data, data_sets.rel2idx, FLAGS, error_file_name)
+                
+                # train_acc = evaluater.accuracy_eval(sess, eval_neg_prob, placeholder, 
+                #                                     train_test_data, data_sets.rel2idx, 
+                #                                     FLAGS, error_file_name)
+                
                 train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
                                                    train_test_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
-                print("KL & CorrCoeff:", train_acc, end='')
+                # print("KL & CorrCoeff:", train_acc, end='')
+                print("CorrCoeff:", train_acc, end='') # just going with corrcoeff for now
+                
                 train_acc_list.append(train_acc)
+                
+                # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
-                dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
+                dev2_acc = 1.0
+                # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
                 dev2_acc_list.append(dev2_acc)
                 print("Accuracy for Devtest: %.5f" % dev2_acc)
 
@@ -192,7 +201,7 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', '../log/', 'tensorboard log files')
 
     """dataset parameters"""
-    flags.DEFINE_string('train_dir', '../data', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
     # flags.DEFINE_string('train_file', 'wordnet_train.txt', 'which training file to use')
     flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'wordnet_train_test.txt', 'which dev file to use')
@@ -251,8 +260,8 @@ if __name__ == '__main__':
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 100, 'Number of steps to run trainer.')
-    flags.DEFINE_integer('batch_size', 8000, 'Batch size. Must divide evenly into the dataset sizes.')
+    flags.DEFINE_integer('max_steps', 200, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('batch_size', 128, 'Batch size. Must divide evenly into the dataset sizes.')
     flags.DEFINE_integer('print_every', 10, 'Every 20 step, print out the evaluation results')
     flags.DEFINE_integer('embed_dim', 5, 'word embedding dimension')
     flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')

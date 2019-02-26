@@ -94,17 +94,17 @@ def kl(x, y):
     return tf.distributions.kl_divergence(X, Y)
 
 def computeKL(sess, pred_prob, true_label):
+    print(len(true_label))
     klDiv = []
     for i, q in enumerate(pred_prob):
         val = kl(true_label[i], q).eval(session=sess)
         klDiv.append(val)
+        # print(val)
     return klDiv
 
 def computeCorrelation(sess, pred_prob, true_label):
-    corr = []
-    for i, q in enumerate(pred_prob):
-        val = kl(true_label[i], q).eval(session=sess)
-        corr.append(val)
+    from scipy.stats.stats import pearsonr
+    corr, pval = pearsonr(pred_prob, true_label)
     return corr
 
 def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_name):
@@ -112,11 +112,13 @@ def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_
   true_label = feed_dict[placeholder['label_placeholder']]
   pred_error = sess.run(error, feed_dict=feed_dict)
   pred_prob = np.exp(-pred_error, dtype=np.float64)
-  kl_divergence = computeKL(sess, pred_prob, true_label)
+  # kl_divergence = computeKL(sess, pred_prob, true_label)
   corrCoef = computeCorrelation(sess, pred_prob, true_label)
-  _, acc = best_f1_threshold(pred_error, true_label)
-  print('auc', calc_auc(pred_error, true_label))
-  return np.mean(kl_divergence), np.mean(corrCoef)
+  # _, acc = best_f1_threshold(pred_error, true_label)
+  # print('auc', calc_auc(pred_error, true_label))
+  
+  # return np.mean(kl_divergence), corrCoef
+  return corrCoef
 
 def do_eval(sess, error, placeholder,dev, devtest, curr_best, FLAGS, error_file_name, rel2idx, word2idx):
   feed_dict_dev = feeder.fill_feed_dict(dev, placeholder, rel2idx, 0)
@@ -127,8 +129,6 @@ def do_eval(sess, error, placeholder,dev, devtest, curr_best, FLAGS, error_file_
   print('AUC', calc_auc(pred_error, true_label))
   # print('average precision')
   # return average_precision_score(true_label, -pred_error)
-
-
 
   thresh, _ = best_f1_threshold(pred_error, true_label)
   # thresh, _ = best_accu_threshold(pred_error, true_label)
