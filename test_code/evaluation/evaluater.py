@@ -22,7 +22,6 @@ from utils import feeder
 import numpy as np
 import sklearn
 from collections import defaultdict
-import tensorflow as tf
 
 
 def best_accu_threshold(errs, target):
@@ -88,18 +87,19 @@ def accuracy_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file
   return acc
 
 
-def kl(x, y):
-    X = tf.distributions.Bernoulli(probs=x)
-    Y = tf.distributions.Bernoulli(probs=y)
-    return tf.distributions.kl_divergence(X, Y)
-
 def computeKL(sess, pred_prob, true_label):
+    # TODO: Think about the edge cases for KL, how to handle cases when
+    # p=0, q=0 or q=1
     print(len(true_label))
     klDiv = []
     for i, q in enumerate(pred_prob):
-        val = kl(true_label[i], q).eval(session=sess)
+        q += 1e-5
+        p = true_label[i]
+        if p == 0 or q>=1:
+            val = 0
+        else:
+            val = p*(np.log(p)-np.log(q))+(1-p)*(np.log(1-p)-np.log(1-q))
         klDiv.append(val)
-        # print(val)
     return klDiv
 
 def computeCorrelation(sess, pred_prob, true_label):
@@ -112,13 +112,9 @@ def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_
   true_label = feed_dict[placeholder['label_placeholder']]
   pred_error = sess.run(error, feed_dict=feed_dict)
   pred_prob = np.exp(-pred_error, dtype=np.float64)
-  # kl_divergence = computeKL(sess, pred_prob, true_label)
+  kl_divergence = computeKL(sess, pred_prob, true_label)
   corrCoef = computeCorrelation(sess, pred_prob, true_label)
-  # _, acc = best_f1_threshold(pred_error, true_label)
-  # print('auc', calc_auc(pred_error, true_label))
-  
-  # return np.mean(kl_divergence), corrCoef
-  return corrCoef
+  return np.mean(kl_divergence), corrCoef
 
 def do_eval(sess, error, placeholder,dev, devtest, curr_best, FLAGS, error_file_name, rel2idx, word2idx):
   feed_dict_dev = feeder.fill_feed_dict(dev, placeholder, rel2idx, 0)

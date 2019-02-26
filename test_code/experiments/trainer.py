@@ -145,9 +145,7 @@ def run_training():
                 train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
                                                    train_test_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
-                # print("KL & CorrCoeff:", train_acc, end='')
-                print("CorrCoeff:", train_acc, end='') # just going with corrcoeff for now
-                
+                print("KL & CorrCoeff:", train_acc, end='')
                 train_acc_list.append(train_acc)
                 
                 # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
@@ -201,7 +199,7 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', '../log/', 'tensorboard log files')
 
     """dataset parameters"""
-    flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', '../data', 'Directory to put the data.')
     # flags.DEFINE_string('train_file', 'wordnet_train.txt', 'which training file to use')
     flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'wordnet_train_test.txt', 'which dev file to use')
