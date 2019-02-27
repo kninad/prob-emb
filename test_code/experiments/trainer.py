@@ -55,12 +55,10 @@ def run_training():
     #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
     
     exp_name = 'time-' + str(datetime.now()) + '_train_file' + str(FLAGS.train_file) + \
-    '_model' + str(FLAGS.model) + '_learning_rate' + str(FLAGS.learning_rate) + \
-    '_batchsize' + str(FLAGS.batch_size) + '_dim' + str(FLAGS.embed_dim) + \
-    '_steps' + str(FLAGS.max_steps)
+    '_model' + str(FLAGS.model) + '_batchsize' + str(FLAGS.batch_size) + \
+    '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps) + '_overfit' + str(FLAGS.overfit)
     
     exp_name = exp_name.replace(":", "-")
-
     print('experiment file name', exp_name)
     error_file_name = FLAGS.error_file + exp_name + '.txt'
     save_model_name = FLAGS.params_file + exp_name + '.pkl'
@@ -123,7 +121,8 @@ def run_training():
         condloss_list = []
         margloss_list = []
         kldiv_steps = []
-        corrs_steps = []
+        pears_corr_steps = []
+        spear_corr_steps = []
 
         for step in range(FLAGS.max_steps):
             start_time = time.time()
@@ -172,27 +171,29 @@ def run_training():
                 train_acc_list.append(train_acc)
 
                 kldiv_steps.append(train_acc[0])
-                corrs_steps.append(train_acc[1])
+                # corrs_steps.append(train_acc[1])
+                pears_corr_steps.append(train_acc[1])
+                spear_corr_steps.append(train_acc[2])
                 
                 # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
-                dev2_acc = 1.0
+                
                 # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
-                dev2_acc_list.append(dev2_acc)
-                print("Accuracy for Devtest: %.5f" % dev2_acc)
+                # dev2_acc_list.append(dev2_acc)
+                # print("Accuracy for Devtest: %.5f" % dev2_acc)
 
-                print(i)
-                if dev2_acc >= curr_best:
-                    i = 0
-                    curr_best = dev2_acc
-                    if FLAGS.save:
-                        save_model(save_model_name, sess, model)
+                # print(i)
+                # if dev2_acc >= curr_best:
+                #     i = 0
+                #     curr_best = dev2_acc
+                #     if FLAGS.save:
+                #         save_model(save_model_name, sess, model)
                 # elif dev2_acc < curr_best and i<50:
                 #     i+=1
                 # elif i>=50:
                     # sys.exit()
-                print('current best accurancy: %.5f' %curr_best)
-                print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
+                # print('current best accurancy: %.5f' %curr_best)
+                # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
 
         condloss_list = np.asarray(condloss_list)
         np.save(log_folder + 'condloss.npy', condloss_list)
@@ -203,15 +204,18 @@ def run_training():
         kldiv_steps = np.asarray(kldiv_steps)
         np.save(log_folder + 'kldivs.npy', kldiv_steps)
 
-        corrs_steps = np.asarray(corrs_steps)
-        np.save(log_folder + 'corrs.npy', corrs_steps)
+        pears_corr_steps = np.asarray(pears_corr_steps)
+        np.save(log_folder + 'pears_corrs.npy', pears_corr_steps)
+
+        spear_corr_steps = np.asarray(spear_corr_steps)
+        np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
 
 
-        print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
-        opt_idx = np.argmax(np.asarray(dev2_acc_list))
-        print('Epoch', opt_idx)
+        # print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
+        # opt_idx = np.argmax(np.asarray(dev2_acc_list))
+        # print('Epoch', opt_idx)
         # print('Best Dev2 Score: %.5f' %dev2_acc_list[opt_idx])
-        print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
+        # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
         # plt.ioff()
         # plt.figure(3)
         # plt.plot(moving_average)
@@ -300,8 +304,8 @@ if __name__ == '__main__':
     flags.DEFINE_integer('max_steps', 500, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 128, 'Batch size. Must divide evenly into the dataset sizes.')
     flags.DEFINE_integer('print_every', 100, 'Every 20 step, print out the evaluation results')
-    flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
-    flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
+    flags.DEFINE_integer('embed_dim', 10, 'word embedding dimension')
+    flags.DEFINE_boolean('overfit', True, 'Over fit the dev data to check model')
 
 
     """evalution and error analysis parameters"""

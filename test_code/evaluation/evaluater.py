@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 from utils import feeder
 import numpy as np
+from scipy.stats import spearmanr, pearsonr
 import sklearn
 from collections import defaultdict
 
@@ -96,9 +97,10 @@ def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_
   pred_prob = np.clip(pred_prob, 0, 1)  
 
   kldiv_mean = kl_divergence_batch(pred_prob, true_label)  
-  corr_coef = np.corrcoef(pred_prob, true_label)[0,1]
-
-  return kldiv_mean, corr_coef
+  # pears_corr = np.corrcoef(pred_prob, true_label)[0,1] # Pearson
+  pears_corr = pearsonr(pred_prob, true_label)[0] # Pearson
+  spear_corr = spearmanr(pred_prob, true_label)[0] # Spearman
+  return kldiv_mean, pears_corr, spear_corr
 
 
 '''
@@ -131,12 +133,6 @@ def kl_div_bern(pred_prob, gold_prob):
         except ValueError:
             print(gold_prob, pred_prob)
     return val
-
-
-
-
-
-
 
 
 
