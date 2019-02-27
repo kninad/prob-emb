@@ -199,7 +199,7 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', '../log/', 'tensorboard log files')
 
     """dataset parameters"""
-    flags.DEFINE_string('train_dir', '../data', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
     # flags.DEFINE_string('train_file', 'wordnet_train.txt', 'which training file to use')
     flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'wordnet_train_test.txt', 'which dev file to use')

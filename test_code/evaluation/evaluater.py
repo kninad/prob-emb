@@ -87,34 +87,59 @@ def accuracy_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file
   return acc
 
 
-def computeKL(sess, pred_prob, true_label):
-    # TODO: Think about the edge cases for KL, how to handle cases when
-    # p=0, q=0 or q=1
-    print(len(true_label))
-    klDiv = []
-    for i, q in enumerate(pred_prob):
-        q += 1e-5
-        p = true_label[i]
-        if p == 0 or q>=1:
-            val = 0
-        else:
-            val = p*(np.log(p)-np.log(q))+(1-p)*(np.log(1-p)-np.log(1-q))
-        klDiv.append(val)
-    return klDiv
-
-def computeCorrelation(sess, pred_prob, true_label):
-    from scipy.stats.stats import pearsonr
-    corr, pval = pearsonr(pred_prob, true_label)
-    return corr
 
 def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_name):
   feed_dict = feeder.fill_feed_dict(data_set, placeholder, rel2idx, 0)
   true_label = feed_dict[placeholder['label_placeholder']]
   pred_error = sess.run(error, feed_dict=feed_dict)
-  pred_prob = np.exp(-pred_error, dtype=np.float64)
-  kl_divergence = computeKL(sess, pred_prob, true_label)
-  corrCoef = computeCorrelation(sess, pred_prob, true_label)
-  return np.mean(kl_divergence), corrCoef
+  pred_prob = np.exp(-1 * np.asarray(pred_error))
+  pred_prob = np.clip(pred_prob, 0, 1)  
+
+  kldiv_mean = kl_divergence_batch(pred_prob, true_label)  
+  corr_coef = np.corrcoef(pred_prob, true_label)[0,1]
+
+  return kldiv_mean, corr_coef
+
+
+'''
+KL-Div code taken from:
+https://github.com/aylai/EntailmentProbabilityEmbedding/blob/master/util/Probability.py
+one of the reference papers for box-emb
+'''
+
+# assume input is 2 vectors:
+# vec1 : predicted cpr values (negative log prob)
+# vec2 : gold cpr values
+def kl_divergence_batch(pred_cpr, gold_vec):
+    vals = []
+    for index, pred_val in enumerate(pred_cpr):
+        gold_val = gold_vec[index]
+        vals.append(kl_div_bern(pred_val, gold_val))
+    return np.mean(vals)
+
+
+def kl_div_bern(pred_prob, gold_prob):
+    val = 0
+    if gold_prob > 0 and pred_prob > 0:
+        try:
+            val += gold_prob * (np.log(gold_prob / pred_prob))
+        except ValueError:
+            print(gold_prob, pred_prob)
+    if gold_prob < 1 and pred_prob < 1:
+        try:
+            val += (1-gold_prob) * (np.log((1-gold_prob)/(1-pred_prob)))
+        except ValueError:
+            print(gold_prob, pred_prob)
+    return val
+
+
+
+
+
+
+
+
+
 
 def do_eval(sess, error, placeholder,dev, devtest, curr_best, FLAGS, error_file_name, rel2idx, word2idx):
   feed_dict_dev = feeder.fill_feed_dict(dev, placeholder, rel2idx, 0)
