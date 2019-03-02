@@ -47,12 +47,18 @@ def save_model(name, sess, model):
     f.close()
 
 def run_training():
-    exp_name = 'time' + str(datetime.now()) + 'train_file' + str(FLAGS.train_file) + 'freeze_grad' + str(
-        FLAGS.freeze_grad) + 'neg' + str(FLAGS.neg) + 'model' + str(FLAGS.model) + '_measure' + str(FLAGS.measure) + \
-               '_w1' + str(FLAGS.w1) + '_w2' + str(FLAGS.w2) + '_learning_rate' + str(
-        FLAGS.learning_rate) + '_batchsize' + str(FLAGS.batch_size) + '_dim' + str(FLAGS.embed_dim) + \
-               '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
-        FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
+    # exp_name = 'time' + str(datetime.now()) + 'train_file' + str(FLAGS.train_file) + 'freeze_grad' + str(
+    #     FLAGS.freeze_grad) + 'neg' + str(FLAGS.neg) + 'model' + str(FLAGS.model) + '_measure' + str(FLAGS.measure) + \
+    #            '_w1' + str(FLAGS.w1) + '_w2' + str(FLAGS.w2) + '_learning_rate' + str(
+    #     FLAGS.learning_rate) + '_batchsize' + str(FLAGS.batch_size) + '_dim' + str(FLAGS.embed_dim) + \
+    #            '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
+    #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
+
+    exp_name = 'time-' + str(datetime.now()) + '_train_file' + str(FLAGS.train_file) + \
+    '_model' + str(FLAGS.model) + '_batchsize' + str(FLAGS.batch_size) + \
+    '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps) + '_overfit' + str(FLAGS.overfit)
+
+    exp_name = exp_name.replace(":", "-")
     print('experiment file name', exp_name)
     error_file_name = FLAGS.error_file + exp_name + '.txt'
     save_model_name = FLAGS.params_file + exp_name + '.pkl'
@@ -108,6 +114,14 @@ def run_training():
         summary_writer = tf.summary.FileWriter(log_folder, graph=sess.graph)
         if FLAGS.marginal_method == 'softplus' or FLAGS.model == 'box':
                 sess.run([model.project_op])
+
+        # Lists to store data calculated during training
+        condloss_list = []
+        margloss_list = []
+        kldiv_steps = []
+        pears_corr_steps = []
+        spear_corr_steps = []
+
         for step in range(FLAGS.max_steps):
             start_time = time.time()
             train_feed_dict = feeder.fill_feed_dict(train_data, placeholder, data_sets.rel2idx, FLAGS.batch_size)
@@ -125,9 +139,14 @@ def run_training():
             #     plt.pause(0.0001)
             #     plt.clf()
             # min_embed, delta_embed = sess.run([model.min_embed, model.delta_embed], feed_dict=train_feed_dict)
+
             debug, loss_value, summary = sess.run([model.debug, model.loss, summary_op], feed_dict=train_feed_dict)
             summary_writer.add_summary(summary, step)
             duration = time.time() - start_time
+
+            condloss_list.append(cond_loss)
+            margloss_list.append(marg_loss)
+
             if (step%(FLAGS.print_every) == 0) and step > 1:
                 print('='*100)
                 print('step', step)
@@ -147,32 +166,53 @@ def run_training():
                                                    FLAGS, error_file_name)
                 print("KL & CorrCoeff:", train_acc, end='')
                 train_acc_list.append(train_acc)
-                
+
+                kldiv_steps.append(train_acc[0])
+                # corrs_steps.append(train_acc[1])
+                pears_corr_steps.append(train_acc[1])
+                spear_corr_steps.append(train_acc[2])
+
                 # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
-                dev2_acc = 1.0
-                # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
-                dev2_acc_list.append(dev2_acc)
-                print("Accuracy for Devtest: %.5f" % dev2_acc)
 
-                print(i)
-                if dev2_acc >= curr_best:
-                    i = 0
-                    curr_best = dev2_acc
-                    if FLAGS.save:
-                        save_model(save_model_name, sess, model)
+                # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
+                # dev2_acc_list.append(dev2_acc)
+                # print("Accuracy for Devtest: %.5f" % dev2_acc)
+
+                # print(i)
+                # if dev2_acc >= curr_best:
+                #     i = 0
+                #     curr_best = dev2_acc
+                #     if FLAGS.save:
+                #         save_model(save_model_name, sess, model)
                 # elif dev2_acc < curr_best and i<50:
                 #     i+=1
                 # elif i>=50:
                     # sys.exit()
-                print('current best accurancy: %.5f' %curr_best)
-                print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
+                # print('current best accurancy: %.5f' %curr_best)
+                # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
 
-        print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
-        opt_idx = np.argmax(np.asarray(dev2_acc_list))
-        print('Epoch', opt_idx)
+        condloss_list = np.asarray(condloss_list)
+        np.save(log_folder + 'condloss.npy', condloss_list)
+
+        margloss_list = np.asarray(margloss_list)
+        np.save(log_folder + 'margloss.npy', margloss_list)
+
+        kldiv_steps = np.asarray(kldiv_steps)
+        np.save(log_folder + 'kldivs.npy', kldiv_steps)
+
+        pears_corr_steps = np.asarray(pears_corr_steps)
+        np.save(log_folder + 'pears_corrs.npy', pears_corr_steps)
+
+        spear_corr_steps = np.asarray(spear_corr_steps)
+        np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
+
+
+        # print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
+        # opt_idx = np.argmax(np.asarray(dev2_acc_list))
+        # print('Epoch', opt_idx)
         # print('Best Dev2 Score: %.5f' %dev2_acc_list[opt_idx])
-        print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
+        # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
         # plt.ioff()
         # plt.figure(3)
         # plt.plot(moving_average)
@@ -193,23 +233,31 @@ if __name__ == '__main__':
     """basic parameters"""
     flags.DEFINE_boolean('save', False, 'Save the model')
     flags.DEFINE_integer('random_seed', 20180112, 'random seed for model')
-    flags.DEFINE_string('params_file', '../params/', 'file to save parameters')
-    flags.DEFINE_string('error_file', '../error_analysis/', 'dictionary to save error analysis result')
-    flags.DEFINE_string('ouput_file', '../result/', 'print the result to this file')
-    flags.DEFINE_string('log_file', '../log/', 'tensorboard log files')
+    flags.DEFINE_string('params_file', './params/', 'file to save parameters')
+    flags.DEFINE_string('error_file', './error_analysis/', 'dictionary to save error analysis result')
+    flags.DEFINE_string('ouput_file', './result/', 'print the result to this file')
+    flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
     """dataset parameters"""
     flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
     # flags.DEFINE_string('train_file', 'wordnet_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'wordnet_train_test.txt', 'which dev file to use')
-    flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
     # flags.DEFINE_string('dev_file', 'wordnet_dev.txt', 'which dev file to use')
-    flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
     # flags.DEFINE_string('test_file', 'wordnet_test.txt', 'which test file to use')
-    flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
     # flags.DEFINE_string('marg_prob_file', 'count.txt', 'which marginal probability file to use')
-    flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+
+    # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
+    # flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
+    # flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
+    # flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
+    # flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+
+    flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
+    flags.DEFINE_string('train_test_file', 'book_train_test.txt', 'which dev file to use')
+    flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
+    flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
+    flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
+
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
     flags.DEFINE_integer('rel_size', 1,
@@ -258,11 +306,11 @@ if __name__ == '__main__':
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 200, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('max_steps', 500, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 128, 'Batch size. Must divide evenly into the dataset sizes.')
-    flags.DEFINE_integer('print_every', 10, 'Every 20 step, print out the evaluation results')
-    flags.DEFINE_integer('embed_dim', 5, 'word embedding dimension')
-    flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
+    flags.DEFINE_integer('print_every', 100, 'Every 20 step, print out the evaluation results')
+    flags.DEFINE_integer('embed_dim', 10, 'word embedding dimension')
+    flags.DEFINE_boolean('overfit', True, 'Over fit the dev data to check model')
 
 
     """evalution and error analysis parameters"""
