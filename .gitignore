@@ -1,2 +1,5 @@
-utils/.ipynb_checkpoints/*
-.gitignore
+*/data/*
+*.pyc
+*/log/*
+*/error_analysis/*
+*/.ipynb_checkpoints/*

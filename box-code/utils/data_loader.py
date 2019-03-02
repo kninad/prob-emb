@@ -58,10 +58,10 @@ class DataSet(object):
             next_batch = self._tuples[start:end]
         batch_idx = [i for i in next_batch]
         r_idx, t1_idx, t2_idx, s = loader_utils.sep_idx(batch_idx)
-        l = np.ones(len(s))
-        for i in range(len(s)):
-            if s[i] <= 0:
-                l[i] = 0.
+        l = np.asanyarray(s) #ones(len(s))
+        # for i in range(len(s)):
+        #     if s[i] <= 0:
+        #         l[i] = 0.
         return np.asarray(r_idx), t1_idx, t2_idx, l
 
 
@@ -78,7 +78,8 @@ def read_data_sets(FLAGS, dtype=tf.float32):
     TRAIN_TEST_FILE = train_dir + '/' + FLAGS.train_test_file
     DEV_FILE = train_dir + '/' + FLAGS.dev_file
     DEVTEST_FILE = train_dir + '/' + FLAGS.test_file
-    DICT_FILE = train_dir + '/hypernym_vocab.txt' 
+    # DICT_FILE = train_dir + '/hypernym_vocab.txt'
+    DICT_FILE = train_dir + '/vocabulary.txt'
     REL_FILE = train_dir + '/rel.txt'
 
     # read in all files using loader_utils functions

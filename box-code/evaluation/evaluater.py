@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 from utils import feeder
 import numpy as np
+from scipy.stats import spearmanr, pearsonr
 import sklearn
 from collections import defaultdict
 
@@ -88,6 +89,53 @@ def accuracy_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file
 
 
 
+def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_name):
+  feed_dict = feeder.fill_feed_dict(data_set, placeholder, rel2idx, 0)
+  true_label = feed_dict[placeholder['label_placeholder']]
+  pred_error = sess.run(error, feed_dict=feed_dict)
+  pred_prob = np.exp(-1 * np.asarray(pred_error))
+  pred_prob = np.clip(pred_prob, 0, 1)  
+
+  kldiv_mean = kl_divergence_batch(pred_prob, true_label)  
+  # pears_corr = np.corrcoef(pred_prob, true_label)[0,1] # Pearson
+  pears_corr = pearsonr(pred_prob, true_label)[0] # Pearson
+  spear_corr = spearmanr(pred_prob, true_label)[0] # Spearman
+  return kldiv_mean, pears_corr, spear_corr
+
+
+'''
+KL-Div code taken from:
+https://github.com/aylai/EntailmentProbabilityEmbedding/blob/master/util/Probability.py
+one of the reference papers for box-emb
+'''
+
+# assume input is 2 vectors:
+# vec1 : predicted cpr values (negative log prob)
+# vec2 : gold cpr values
+def kl_divergence_batch(pred_cpr, gold_vec):
+    vals = []
+    for index, pred_val in enumerate(pred_cpr):
+        gold_val = gold_vec[index]
+        vals.append(kl_div_bern(pred_val, gold_val))
+    return np.mean(vals)
+
+
+def kl_div_bern(pred_prob, gold_prob):
+    val = 0
+    if gold_prob > 0 and pred_prob > 0:
+        try:
+            val += gold_prob * (np.log(gold_prob / pred_prob))
+        except ValueError:
+            print(gold_prob, pred_prob)
+    if gold_prob < 1 and pred_prob < 1:
+        try:
+            val += (1-gold_prob) * (np.log((1-gold_prob)/(1-pred_prob)))
+        except ValueError:
+            print(gold_prob, pred_prob)
+    return val
+
+
+
 
 def do_eval(sess, error, placeholder,dev, devtest, curr_best, FLAGS, error_file_name, rel2idx, word2idx):
   feed_dict_dev = feeder.fill_feed_dict(dev, placeholder, rel2idx, 0)
@@ -98,8 +146,6 @@ def do_eval(sess, error, placeholder,dev, devtest, curr_best, FLAGS, error_file_
   print('AUC', calc_auc(pred_error, true_label))
   # print('average precision')
   # return average_precision_score(true_label, -pred_error)
-
-
 
   thresh, _ = best_f1_threshold(pred_error, true_label)
   # thresh, _ = best_accu_threshold(pred_error, true_label)

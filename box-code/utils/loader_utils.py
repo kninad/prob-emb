@@ -28,6 +28,7 @@ random_seed = 20180112
 
 def get_vocab(filename):
     """read vocab file, only return word2idx or idx2word. Not including word embeddings"""
+    print(filename)
     word2idx = {}
     f = open(filename, 'r')
     lines = f.readlines()
@@ -61,7 +62,8 @@ def get_data(filename, word2idx, rel2idx):
         i = i.strip()
         if (len(i) > 0):
             i = i.split('\t')
-            e = (i[0], i[1], i[2], float(i[3]))
+            # print(i)
+            e = (i[0], i[1], i[2], float(i[3]))            
             e_idx = convertToIndex(e, word2idx, rel2idx)
             examples.append(e_idx)
     seed(random_seed)
