@@ -53,11 +53,11 @@ def run_training():
     #     FLAGS.learning_rate) + '_batchsize' + str(FLAGS.batch_size) + '_dim' + str(FLAGS.embed_dim) + \
     #            '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
     #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
-    
+
     exp_name = 'time-' + str(datetime.now()) + '_train_file' + str(FLAGS.train_file) + \
     '_model' + str(FLAGS.model) + '_batchsize' + str(FLAGS.batch_size) + \
     '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps) + '_overfit' + str(FLAGS.overfit)
-    
+
     exp_name = exp_name.replace(":", "-")
     print('experiment file name', exp_name)
     error_file_name = FLAGS.error_file + exp_name + '.txt'
@@ -107,16 +107,14 @@ def run_training():
         # plt.ion()
 
         i = 0
-        
         log_folder = log_folder.replace(":", "-")[:150]
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
-        
         summary_op = tf.summary.merge_all()
         summary_writer = tf.summary.FileWriter(log_folder, graph=sess.graph)
         if FLAGS.marginal_method == 'softplus' or FLAGS.model == 'box':
                 sess.run([model.project_op])
-        
+
         # Lists to store data calculated during training        
         condloss_list = []
         margloss_list = []
@@ -141,7 +139,6 @@ def run_training():
             #     plt.pause(0.0001)
             #     plt.clf()
             # min_embed, delta_embed = sess.run([model.min_embed, model.delta_embed], feed_dict=train_feed_dict)
-            
             debug, loss_value, summary = sess.run([model.debug, model.loss, summary_op], feed_dict=train_feed_dict)
             summary_writer.add_summary(summary, step)
             duration = time.time() - start_time
@@ -149,7 +146,6 @@ def run_training():
             condloss_list.append(cond_loss)
             margloss_list.append(marg_loss)
 
-            
             if (step%(FLAGS.print_every) == 0) and step > 1:
                 print('='*100)
                 print('step', step)
@@ -174,10 +170,9 @@ def run_training():
                 # corrs_steps.append(train_acc[1])
                 pears_corr_steps.append(train_acc[1])
                 spear_corr_steps.append(train_acc[2])
-                
+
                 # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
-                
                 # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
                 # dev2_acc_list.append(dev2_acc)
                 # print("Accuracy for Devtest: %.5f" % dev2_acc)
@@ -200,17 +195,14 @@ def run_training():
 
         margloss_list = np.asarray(margloss_list)
         np.save(log_folder + 'margloss.npy', margloss_list)
-        
+
         kldiv_steps = np.asarray(kldiv_steps)
         np.save(log_folder + 'kldivs.npy', kldiv_steps)
 
         pears_corr_steps = np.asarray(pears_corr_steps)
         np.save(log_folder + 'pears_corrs.npy', pears_corr_steps)
-
         spear_corr_steps = np.asarray(spear_corr_steps)
         np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
-
-
         # print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
         # opt_idx = np.argmax(np.asarray(dev2_acc_list))
         # print('Epoch', opt_idx)
@@ -224,8 +216,6 @@ def run_training():
         # with open('./init_analysis/'+exp_name+'.txt', 'w') as outputfile:
         #     for i in grad_norm_list:
         #         outputfile.write(str(i) + '\n')
-
-
 
 
 def main(argv):
@@ -244,15 +234,23 @@ if __name__ == '__main__':
     """dataset parameters"""
     flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
     # flags.DEFINE_string('train_file', 'wordnet_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'wordnet_train_test.txt', 'which dev file to use')
-    flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
     # flags.DEFINE_string('dev_file', 'wordnet_dev.txt', 'which dev file to use')
-    flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
     # flags.DEFINE_string('test_file', 'wordnet_test.txt', 'which test file to use')
-    flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
     # flags.DEFINE_string('marg_prob_file', 'count.txt', 'which marginal probability file to use')
-    flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+
+    # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
+    # flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
+    # flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
+    # flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
+    # flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+
+    flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
+    flags.DEFINE_string('train_test_file', 'book_train_test.txt', 'which dev file to use')
+    flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
+    flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
+    flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
+
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
     flags.DEFINE_integer('rel_size', 1,
