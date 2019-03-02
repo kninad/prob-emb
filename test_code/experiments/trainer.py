@@ -115,7 +115,7 @@ def run_training():
         if FLAGS.marginal_method == 'softplus' or FLAGS.model == 'box':
                 sess.run([model.project_op])
 
-        # Lists to store data calculated during training
+        # Lists to store data calculated during training        
         condloss_list = []
         margloss_list = []
         kldiv_steps = []
@@ -139,7 +139,6 @@ def run_training():
             #     plt.pause(0.0001)
             #     plt.clf()
             # min_embed, delta_embed = sess.run([model.min_embed, model.delta_embed], feed_dict=train_feed_dict)
-
             debug, loss_value, summary = sess.run([model.debug, model.loss, summary_op], feed_dict=train_feed_dict)
             summary_writer.add_summary(summary, step)
             duration = time.time() - start_time
@@ -174,7 +173,6 @@ def run_training():
 
                 # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
-
                 # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
                 # dev2_acc_list.append(dev2_acc)
                 # print("Accuracy for Devtest: %.5f" % dev2_acc)
@@ -203,11 +201,8 @@ def run_training():
 
         pears_corr_steps = np.asarray(pears_corr_steps)
         np.save(log_folder + 'pears_corrs.npy', pears_corr_steps)
-
         spear_corr_steps = np.asarray(spear_corr_steps)
         np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
-
-
         # print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
         # opt_idx = np.argmax(np.asarray(dev2_acc_list))
         # print('Epoch', opt_idx)
@@ -221,8 +216,6 @@ def run_training():
         # with open('./init_analysis/'+exp_name+'.txt', 'w') as outputfile:
         #     for i in grad_norm_list:
         #         outputfile.write(str(i) + '\n')
-
-
 
 
 def main(argv):
