@@ -56,7 +56,8 @@ def create_count_matrix(final_dict):
     for k in final_dict.keys():
         pair = (k,k)
         count_matrix[pair] = len(final_dict[k])
-
+    
+    return count_matrix
 
 def marginal_prob(movie_id, count_matrix, num_users):
     '''function to get the marginal prob:
