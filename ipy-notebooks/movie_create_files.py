@@ -12,8 +12,7 @@ import pandas as pd
 #     df = pd.read_csv(csv_file, delimiter=',', usecols=[0,1,2])
 #     return df
 
-def create_final_dict(DATADIR, filename, ratings_threshold, usernum_threshold):
-    csv_file = DATADIR + filename
+def create_final_dict(csv_file, ratings_threshold, usernum_threshold):
     # using usecols in read_csv to exclude the last column of timestamp
     df = pd.read_csv(csv_file, delimiter=',', usecols=[0,1,2])    
     df = df[df['rating'] >= ratings_threshold]  # rating thresholding
@@ -93,7 +92,7 @@ def conditional_prob(movie_id1, movie_id2, count_matrix):
     return joint_count * 1.0/margn_count
 
 
-def create_vocab_marginal_files(count_matrix, num_users):
+def create_vocab_marginal_files(count_matrix, num_users, datadir):
     # Create the marginals file and a separate vocab file (for all the possible movieIds)
     # Consider only the diagonal entries in count_matrix
     # Also, the 2 lists work as follows: 
@@ -109,12 +108,12 @@ def create_vocab_marginal_files(count_matrix, num_users):
             marginals.append(marginal_prob(k1, count_matrix, num_users))
 
     # Write out the lists to text files
-    fname_marginals = "marginals.txt"
+    fname_marginals = datadir + "marginals.txt"
     with open(fname_marginals, "w") as f:
         for prob in marginals:
             f.write("%s\n" % prob)
 
-    fname_vocab = "movie_vocab.txt"
+    fname_vocab = datadir + "movie_vocab.txt"
     with open(fname_vocab, "w") as f:
         for movid in movieid_vocab:
             f.write("%s\n" % movid)
@@ -122,7 +121,7 @@ def create_vocab_marginal_files(count_matrix, num_users):
     return 
 
 
-def create_trndevtst_files(count_matrix, splits):
+def create_trndevtst_files(count_matrix, splits, datadir):
     REL = "IsA" # Instead of 'IsA' relation, we use 'IsWith'. Nothing substantially different.
     # splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
 
@@ -138,7 +137,7 @@ def create_trndevtst_files(count_matrix, splits):
             tmp_tup2 = (REL, k2, k1, prob_k1k2)
             tup_list.append(tmp_tup2)
     
-    fname_master = "master_data.txt"
+    fname_master = datadir + "master_movie_data.txt"
     with open(fname_master, "w") as f:
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(tup_list)
@@ -169,28 +168,28 @@ def create_trndevtst_files(count_matrix, splits):
 
     # write out the training file
     # trn_data = tup_list[:trn_split]    
-    fname = "movie_train.txt"
+    fname = datadir + "movie_train.txt"
     with open(fname, "w") as f:
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(tup_list[:trn_split])
     
     # write out the dev file
     # tst_data = tup_list[dev_split:]    
-    fname = "movie_dev.txt"
+    fname = datadir + "movie_dev.txt"
     with open(fname, "w") as f:
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(tup_list[trn_split : dev_split])
         
     # write out the test file
     # tst_data = tup_list[dev_split:]
-    fname = "movie_test.txt"
+    fname = datadir + "movie_test.txt"
     with open(fname, "w") as f:
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(tup_list[dev_split:])
     
     # write out the trn-tst file -- its the merger of train+dev for evaluating training
     # trn_tst_data = tup_list[:dev_split]
-    fname = "movie_train_test.txt"
+    fname = datadir + "movie_train_test.txt"
     with open(fname, "w") as f:
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(tup_list[:dev_split])
@@ -199,19 +198,22 @@ def create_trndevtst_files(count_matrix, splits):
 
 
 def main():
-    DATADIR = '../../data/the-movies-dataset/'
-    t_rating = 3.5
-    t_users = 50
-    filename = 'ratings_small.csv'
-    final_dict = create_final_dict(DATADIR, filename, t_rating, t_users)
+    t_rating = 4
+    t_users = 100
     splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
-
+    datadir = 'clean_data_movie_' + str(t_rating) + '_' + str(t_users) + '/'
+    rawdata_file = '../../data/the-movies-dataset/ratings_small.csv'
+    
+    final_dict = create_final_dict(rawdata_file, t_rating, t_users)
     num_users = get_total_users(final_dict)
     cmatrix = create_count_matrix(final_dict)
     del(final_dict)
-
-    create_vocab_marginal_files(cmatrix, num_users)
-    create_trndevtst_files(cmatrix, splits)
+    
+    if not os.path.exists(datadir):
+        os.makedirs(datadir)
+    
+    create_vocab_marginal_files(cmatrix, num_users, datadir)
+    create_trndevtst_files(cmatrix, splits, datadir)
 
 
 if __name__ == "__main__":
