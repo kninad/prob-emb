@@ -65,7 +65,14 @@ def run_training():
     log_folder = FLAGS.log_file + exp_name + '/'
 
     # define evalution number list
-    train_acc_list, dev2_acc_list = [], []
+    # Lists to store data calculated during training        
+    condloss_list = []
+    margloss_list = []
+    kldiv_steps = []
+    pears_corr_steps = []
+    spear_corr_steps = []
+    
+    dev_acc_list = []
     curr_best = 0.0
 
     # read data set is a one time thing, so even it takes a little bit longer, it's fine.
@@ -106,7 +113,7 @@ def run_training():
         # grad_norm_list = []
         # plt.ion()
 
-        i = 0
+        i = 0  #variable to track performance on dev set and stop if no perf gain.
         log_folder = log_folder.replace(":", "-")[:150]
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
@@ -115,12 +122,6 @@ def run_training():
         if FLAGS.marginal_method == 'softplus' or FLAGS.model == 'box':
                 sess.run([model.project_op])
 
-        # Lists to store data calculated during training        
-        condloss_list = []
-        margloss_list = []
-        kldiv_steps = []
-        pears_corr_steps = []
-        spear_corr_steps = []
 
         for step in range(FLAGS.max_steps):
             start_time = time.time()
@@ -160,20 +161,50 @@ def run_training():
                 #                                     train_test_data, data_sets.rel2idx, 
                 #                                     FLAGS, error_file_name)
                 
+                # train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
+                #                                    train_test_data, data_sets.rel2idx,
+                #                                    FLAGS, error_file_name)
+
+                # Should be calculated on the training data, not the traintest!                
                 train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
-                                                   train_test_data, data_sets.rel2idx,
+                                                   train_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
                 print("KL & CorrCoeff:", train_acc, end='')
-                train_acc_list.append(train_acc)
+                # train_acc_list.append(train_acc)
 
                 kldiv_steps.append(train_acc[0])
                 # corrs_steps.append(train_acc[1])
                 pears_corr_steps.append(train_acc[1])
                 spear_corr_steps.append(train_acc[2])
 
-                # TURNED OFF CALCS for DEV SET for now. Once code is fixed, we can proceed to that
+                # CUSTOM CODE FOR DEV SET CALC
+                dev_err_file = 'dev_' + error_file_name
+                dev_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
+                                                data_sets.dev, data_sets.rel2idx,
+                                                FLAGS, dev_err_file)
+                dev_acc_list.append(dev_acc[0]) # just add the kl-div 
+                print("Accuracy for Devtest: %.5f" % dev2_acc[0])
+                print(i)
+                if dev_acc >= curr_best:
+                    i = 0
+                    curr_best = dev_acc
+                    if FLAGS.save:
+                        save_model(save_model_name, sess, model)
+                elif dev_acc < curr_best and i<50:
+                    i+=1
+                elif i>=50:
+                    sys.exit()
+                print('current best accurancy: %.5f' %curr_best)
+                print('Average of dev2 score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
+
+
+
+                # TURNED OFF CALCS for DEVTEST SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
-                # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder, data_sets.dev, data_sets.devtest, curr_best, FLAGS, error_file_name, data_sets.rel2idx, data_sets.word2idx)
+                # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder,
+                #                   data_sets.dev, data_sets.devtest, curr_best,
+                #                   FLAGS, error_file_name, data_sets.rel2idx, 
+                #                   data_sets.word2idx)
                 # dev2_acc_list.append(dev2_acc)
                 # print("Accuracy for Devtest: %.5f" % dev2_acc)
 
@@ -203,19 +234,13 @@ def run_training():
         np.save(log_folder + 'pears_corrs.npy', pears_corr_steps)
         spear_corr_steps = np.asarray(spear_corr_steps)
         np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
-        # print('Average of Top 10 Training Score', np.mean(sorted(train_acc_list, reverse = True)[:10]))
-        # opt_idx = np.argmax(np.asarray(dev2_acc_list))
-        # print('Epoch', opt_idx)
-        # print('Best Dev2 Score: %.5f' %dev2_acc_list[opt_idx])
-        # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
-        # plt.ioff()
-        # plt.figure(3)
-        # plt.plot(moving_average)
-        # plt.draw()
-        # plt.show()
-        # with open('./init_analysis/'+exp_name+'.txt', 'w') as outputfile:
-        #     for i in grad_norm_list:
-        #         outputfile.write(str(i) + '\n')
+
+        print('Average of Top 10 Training Score', np.mean(sorted(kldiv_steps, reverse = True)[:10]))        
+        opt_idx = np.argmax(np.asarray(dev_acc_list))
+        print('Epoch', opt_idx)
+        print('Best Dev Score: %.5f' %dev_acc_list[opt_idx])
+        print('Average of dev score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
+
 
 
 def main(argv):
