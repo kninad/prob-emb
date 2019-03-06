@@ -183,20 +183,22 @@ def run_training():
                 dev_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
                                                 data_sets.dev, data_sets.rel2idx,
                                                 FLAGS, dev_err_file)
-                dev_acc_list.append(dev_acc[0]) # just add the kl-div 
-                print("Accuracy for Devtest: %.5f" % dev2_acc[0])
+                
+                kl_dev = dev_acc[0]
+                dev_acc_list.append(kl_dev) # just add the kl-div                 
+                print("Accuracy for Devtest: %.5f" % kl_dev)
                 print(i)
-                if dev_acc >= curr_best:
+                if kl_dev >= curr_best:
                     i = 0
-                    curr_best = dev_acc
+                    curr_best = kl_dev
                     if FLAGS.save:
                         save_model(save_model_name, sess, model)
-                elif dev_acc < curr_best and i<50:
+                elif kl_dev < curr_best and i<50:
                     i+=1
                 elif i>=50:
                     sys.exit()
-                print('current best accurancy: %.5f' %curr_best)
-                print('Average of dev2 score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
+                print('current best accurancy: %.5f' % curr_best)
+                print('Average of kldev score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
 
 
 
