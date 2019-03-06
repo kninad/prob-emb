@@ -62,12 +62,16 @@ class tf_model(object):
         self.label = placeholder['label_placeholder']
 
         """Initiate box embeddings"""
+        # init to random values at the start
         self.min_embed, self.delta_embed = self.init_word_embedding(data)
+        
+        # project the init embeddings to be constrained within the unit-hypercube
         self.projector = unit_cube.MinMaxHyperCubeProjectorDeltaParam(self.min_embed, self.delta_embed, 0.0, 1e-10)
         self.project_op = self.projector.project_op
         """get unit box representation for both term, no matter they are phrases or words"""
-
+        # For the terms-1 and terms-2 set the min and max embeds
         self.t1_min_embed, self.t1_max_embed, self.t2_min_embed, self.t2_max_embed = self.get_word_embedding(self.t1x, self.t2x)
+        
         """get negative example unit box representation, if it's randomly generated during training."""
         if FLAGS.neg == 'uniform':
             neg_num = 1
@@ -93,8 +97,7 @@ class tf_model(object):
             )
         else:
             conditional_logits, self.meet_min, self.meet_max, self.disjoint, self.nested, self.overlap_volume, self.rhs_volume = self.get_conditional_probability(
-                self.t1_min_embed, self.t1_max_embed, self.t2_min_embed, self.t2_max_embed
-            )
+                self.t1_min_embed, self.t1_max_embed, self.t2_min_embed, self.t2_max_embed)
 
         evaluation_logits, _, _, _, _, _, _ = self.get_conditional_probability(self.t1_min_embed, self.t1_max_embed, self.t2_min_embed, self.t2_max_embed)
         self.eval_prob = -evaluation_logits
@@ -111,6 +114,7 @@ class tf_model(object):
                 self.max_embed = self.min_embed + tf.exp(self.delta_embed)
             else:
                 self.max_embed = self.min_embed + self.delta_embed
+            
             if self.marginal_method == 'universe':
                 self.universe_min = tf.reduce_min(self.min_embed, axis=0, keep_dims=True)
                 self.universe_max = tf.reduce_max(self.max_embed, axis=0, keep_dims=True)
@@ -127,10 +131,11 @@ class tf_model(object):
                 self.predicted_marginal_logits = tf.log(self.box_volume)
             else:
                 raise ValueError("Expected either softplus or universe but received", self.marginal_method)
-            self.marginal_probability = tf.constant(data.margina_prob)
+            
+            self.marginal_probability = tf.constant(data.margina_prob)  
             self.marginal_probability = tf.reshape(self.marginal_probability, [self.vocab_size])
-            self.marg_loss = FLAGS.w2 * tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
-                labels=self.marginal_probability, logits=self.predicted_marginal_logits))
+            self.marg_loss = FLAGS.w2 * tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.marginal_probability,
+                                                                                 logits=self.predicted_marginal_logits))
         else:
             self.marg_loss = tf.constant(0.0)
         self.debug = tf.constant(0.0)

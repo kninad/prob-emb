@@ -185,7 +185,8 @@ def run_training():
                                                 FLAGS, dev_err_file)
                 
                 kl_dev = dev_acc[0]
-                dev_acc_list.append(kl_dev) # just add the kl-div                 
+                dev_acc_list.append(kl_dev) # just add the kl-div 
+                
                 print("Accuracy for Devtest: %.5f" % kl_dev)
                 print(i)
                 if kl_dev >= curr_best:
