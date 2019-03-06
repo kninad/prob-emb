@@ -131,6 +131,7 @@ def run_training():
             _ , cond_loss, marg_loss, reg_loss, loss_value, temperature, summary = sess.run([train_op, model.cond_loss, model.marg_loss,
                                                                                 model.regularization, model.loss, model.temperature, summary_op],
                                                                                feed_dict=train_feed_dict)
+            
             # grad_norm_list.append(grad_norm)
             # moving_average = np.convolve(grad_norm_list, np.ones((50,))/50, mode='valid')
             # if step %5:
@@ -220,6 +221,8 @@ def run_training():
                     # sys.exit()
                 # print('current best accurancy: %.5f' %curr_best)
                 # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
+        dev_acc_list = np.asarray(dev_acc_list)        
+        np.save(log_folder + 'devacc_kl.npy', dev_acc_list)
 
         condloss_list = np.asarray(condloss_list)
         np.save(log_folder + 'condloss.npy', condloss_list)
