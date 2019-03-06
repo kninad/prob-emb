@@ -12,9 +12,12 @@ def plot_vec(yvec, fname, xlab, ylab, title):
     plt.ylabel(ylab)
     plt.title(title)
     plt.savefig(fname)
+    plt.close()
 
 def plot_all_in_logfolder(experiment_folder):
     root = experiment_folder
+
+    dev_kl = np.load(root + 'dev_eval.npy')
     
     cdloss = np.load(root + 'condloss.npy')
     mgloss = np.load(root + 'margloss.npy')
@@ -22,6 +25,7 @@ def plot_all_in_logfolder(experiment_folder):
     scorrs = np.load(root + 'spear_corrs.npy')
     kldivs = np.load(root + 'kldivs.npy')
 
+    plot_vec(dev_kl, root + 'dev_kl.png', 'steps', 'loss', 'Dev set KL vs steps')
     plot_vec(cdloss, root + 'cond_loss.png', 'steps', 'loss', 'Conditional loss vs steps')
     plot_vec(mgloss, root + 'marg_loss.png', 'steps', 'loss', 'Marginal loss vs steps')
     plot_vec(pcorrs, root + 'pearcorrs.png', 'steps', 'correlation coef', 'Pearson Correlation vs steps')
@@ -30,7 +34,7 @@ def plot_all_in_logfolder(experiment_folder):
 
 
 # logfolder = '../log/'
-logfolder = '/home/ninad/Desktop/Link-to-sem4/dsis/prob-emb/test_code/log/'
+logfolder = '/home/ninad/Desktop/Link-to-sem4/dsis/prob-emb/box-code/log/'
 # for root, subdir, _ in os.walk(logfolder):
 #     print(subdir)
 

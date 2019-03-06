@@ -157,7 +157,7 @@ def run_training():
                     sess.run(model.temperature_update)
                 print('Epoch %d: kb_loss = %.5f (%.3f sec)' % (train_data._epochs_completed, loss_value, duration))
                 print('Conditional loss: %.5f, Marginal loss: %.5f , Regularization loss: %.5f' % (cond_loss, marg_loss, reg_loss))
-                print('Training Stats:', end='')
+                print('w Stats:', end='')
                 
                 # train_acc = evaluater.accuracy_eval(sess, eval_neg_prob, placeholder, 
                 #                                     train_test_data, data_sets.rel2idx, 
@@ -171,7 +171,7 @@ def run_training():
                 train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
                                                    train_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
-                print("KL & CorrCoeffs:", train_acc, end='')
+                print("Train data KL & CorrCoeffs:", train_acc, end='')
                 # train_acc_list.append(train_acc)
 
                 kldiv_steps.append(train_acc[0])
@@ -186,10 +186,10 @@ def run_training():
                                                 FLAGS, dev_err_file)
                 
                 kl_dev = dev_acc[0]
-                dev_acc_list.append(kl_dev) # just add the kl-div 
+                dev_acc_list.append(kl_dev) # append the tuple (kl, pears, spears) 
                 
-                print("Accuracy for Devtest: %.5f" % kl_dev)
-                print(i)
+                print("DEV data KL: %.5f" % kl_dev)
+                print("i-value: (selecting best mod):", i)
                 if kl_dev <= curr_best:
                     i = 0
                     curr_best = kl_dev
@@ -198,7 +198,8 @@ def run_training():
                 elif kl_dev > curr_best and i<50:
                     i+=1
                 elif i>=50:
-                    sys.exit()
+                    # sys.exit()
+                    break
                 
                 # TURNED OFF CALCS for DEVTEST SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
@@ -223,7 +224,7 @@ def run_training():
                 # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
 
         dev_acc_list = np.asarray(dev_acc_list) # kldvis on dev data       
-        np.save(log_folder + 'devacc_kl.npy', dev_acc_list)
+        np.save(log_folder + 'dev_eval.npy', dev_acc_list)
 
         condloss_list = np.asarray(condloss_list)
         np.save(log_folder + 'condloss.npy', condloss_list)
@@ -328,7 +329,7 @@ if __name__ == '__main__':
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 1000, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('max_steps', 20000, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 512, 'Batch size. Must divide evenly into the dataset sizes.')
     flags.DEFINE_integer('print_every', 20, 'Every 20 step, print out the evaluation results')
     flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
