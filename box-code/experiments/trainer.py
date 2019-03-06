@@ -270,17 +270,17 @@ if __name__ == '__main__':
     # flags.DEFINE_string('test_file', 'wordnet_test.txt', 'which test file to use')
     # flags.DEFINE_string('marg_prob_file', 'count.txt', 'which marginal probability file to use')
 
-    # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
-    # flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
-    # flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
-    # flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
-    # flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+    flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
+    flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
+    flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
+    flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
+    flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
 
-    flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_test_file', 'book_train_test.txt', 'which dev file to use')
-    flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
-    flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
-    flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
+    # flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
+    # flags.DEFINE_string('train_test_file', 'book_train_test.txt', 'which dev file to use')
+    # flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
+    # flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
+    # flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
 
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
