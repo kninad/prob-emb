@@ -54,12 +54,13 @@ def run_training():
     #            '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
     #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
 
-    exp_name = 'time-' + str(datetime.now()) + '_train_file' + str(FLAGS.train_file) + \
-    '_model' + str(FLAGS.model) + '_batchsize' + str(FLAGS.batch_size) + \
-    '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps) + '_overfit' + str(FLAGS.overfit)
+    exp_name = 'time' + str(datetime.now()) + '_trnfile' + str(FLAGS.train_file) + \
+        '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + \
+        '_model' + str(FLAGS.model) + '_bsize' + str(FLAGS.batch_size) + \
+        '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps)
 
     exp_name = exp_name.replace(":", "-")
-    print('experiment file name', exp_name)
+    print('experiment file name:-', exp_name)
     error_file_name = FLAGS.error_file + exp_name + '.txt'
     save_model_name = FLAGS.params_file + exp_name + '.pkl'
     log_folder = FLAGS.log_file + exp_name + '/'
@@ -73,7 +74,7 @@ def run_training():
     spear_corr_steps = []
     
     dev_acc_list = []
-    curr_best = 0.0
+    curr_best = np.inf  # maximum value for kl-divergence
 
     # read data set is a one time thing, so even it takes a little bit longer, it's fine.
     data_sets = data_loader.read_data_sets(FLAGS)
@@ -170,7 +171,7 @@ def run_training():
                 train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
                                                    train_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
-                print("KL & CorrCoeff:", train_acc, end='')
+                print("KL & CorrCoeffs:", train_acc, end='')
                 # train_acc_list.append(train_acc)
 
                 kldiv_steps.append(train_acc[0])
@@ -189,20 +190,16 @@ def run_training():
                 
                 print("Accuracy for Devtest: %.5f" % kl_dev)
                 print(i)
-                if kl_dev >= curr_best:
+                if kl_dev <= curr_best:
                     i = 0
                     curr_best = kl_dev
                     if FLAGS.save:
                         save_model(save_model_name, sess, model)
-                elif kl_dev < curr_best and i<50:
+                elif kl_dev > curr_best and i<50:
                     i+=1
                 elif i>=50:
                     sys.exit()
-                print('current best accurancy: %.5f' % curr_best)
-                print('Average of kldev score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
-
-
-
+                
                 # TURNED OFF CALCS for DEVTEST SET for now. Once code is fixed, we can proceed to that
                 # TODO: Have to change it later, just like above function kl_corr_eval
                 # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder,
@@ -224,7 +221,8 @@ def run_training():
                     # sys.exit()
                 # print('current best accurancy: %.5f' %curr_best)
                 # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
-        dev_acc_list = np.asarray(dev_acc_list)        
+
+        dev_acc_list = np.asarray(dev_acc_list) # kldvis on dev data       
         np.save(log_folder + 'devacc_kl.npy', dev_acc_list)
 
         condloss_list = np.asarray(condloss_list)
@@ -233,7 +231,7 @@ def run_training():
         margloss_list = np.asarray(margloss_list)
         np.save(log_folder + 'margloss.npy', margloss_list)
 
-        kldiv_steps = np.asarray(kldiv_steps)
+        kldiv_steps = np.asarray(kldiv_steps)   # kldvis on train data
         np.save(log_folder + 'kldivs.npy', kldiv_steps)
 
         pears_corr_steps = np.asarray(pears_corr_steps)
@@ -241,11 +239,11 @@ def run_training():
         spear_corr_steps = np.asarray(spear_corr_steps)
         np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
 
-        print('Average of Top 10 Training Score', np.mean(sorted(kldiv_steps, reverse = True)[:10]))        
-        opt_idx = np.argmax(np.asarray(dev_acc_list))
-        print('Epoch', opt_idx)
-        print('Best Dev Score: %.5f' %dev_acc_list[opt_idx])
-        print('Average of dev score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
+        # print('Average of Top 10 Training Score', np.mean(sorted(kldiv_steps, reverse = True)[:10]))        
+        # opt_idx = np.argmax(np.asarray(dev_acc_list))
+        # print('Epoch', opt_idx)
+        # print('Best Dev Score: %.5f' %dev_acc_list[opt_idx])
+        # print('Average of dev score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
 
 
 
@@ -315,7 +313,7 @@ if __name__ == '__main__':
 
     """optimization parameters"""
     flags.DEFINE_string('optimizer', 'adam', 'which optimizer to use: adam or sgd')
-    flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
+    flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
 
     flags.DEFINE_float('epsilon', 1e-8, 'Optimizer epsilon')
     flags.DEFINE_float('softfreeze', '0.0', 'whether to use soft gradient on neg delta embedding')
@@ -323,18 +321,18 @@ if __name__ == '__main__':
 
     """loss parameters"""
     flags.DEFINE_float('w1', 1.0, 'weight on conditional prob loss')
-    flags.DEFINE_float('w2', 1.0, 'weight on marginal prob loss')
-    flags.DEFINE_float('r1', 0.0, 'regularization parameter to reduce poe to be box-ish') # 0.1 for universe
+    flags.DEFINE_float('w2', 0.5, 'weight on marginal prob loss')
+    flags.DEFINE_float('r1', 0.1, 'regularization parameter to reduce poe to be box-ish') # 0.1 for universe
     flags.DEFINE_string('regularization_method', 'delta', 'method to regularizing the embedding, either delta'
                                                                   'or universe_edge')
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 500, 'Number of steps to run trainer.')
-    flags.DEFINE_integer('batch_size', 128, 'Batch size. Must divide evenly into the dataset sizes.')
-    flags.DEFINE_integer('print_every', 100, 'Every 20 step, print out the evaluation results')
-    flags.DEFINE_integer('embed_dim', 10, 'word embedding dimension')
-    flags.DEFINE_boolean('overfit', True, 'Over fit the dev data to check model')
+    flags.DEFINE_integer('max_steps', 1000, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('batch_size', 512, 'Batch size. Must divide evenly into the dataset sizes.')
+    flags.DEFINE_integer('print_every', 20, 'Every 20 step, print out the evaluation results')
+    flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
+    flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
 
 
     """evalution and error analysis parameters"""
