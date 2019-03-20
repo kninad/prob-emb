@@ -56,7 +56,7 @@ def run_training():
 
     exp_name = 'time' + str(datetime.now()) + '_trnfile' + str(FLAGS.train_file) + \
         '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + \
-        '_model' + str(FLAGS.model) + '_bsize' + str(FLAGS.batch_size) + \
+        '_model' + str(FLAGS.model) + '_useKl' + str(FLAGS.useLossKL) + \
         '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps)
 
     exp_name = exp_name.replace(":", "-")
@@ -65,15 +65,9 @@ def run_training():
     save_model_name = FLAGS.params_file + exp_name + '.pkl'
     log_folder = FLAGS.log_file + exp_name + '/'
 
-    # define evalution number list
-    # Lists to store data calculated during training        
-    condloss_list = []
-    margloss_list = []
-    kldiv_steps = []
-    pears_corr_steps = []
-    spear_corr_steps = []
-    
-    dev_acc_list = []
+    loss_file = log_folder + 'losses.txt'
+    eval_file = log_folder + 'evals.txt'
+
     curr_best = np.inf  # maximum value for kl-divergence
 
     # read data set is a one time thing, so even it takes a little bit longer, it's fine.
@@ -146,104 +140,48 @@ def run_training():
             summary_writer.add_summary(summary, step)
             duration = time.time() - start_time
 
-            condloss_list.append(cond_loss)
-            margloss_list.append(marg_loss)
-
             if (step%(FLAGS.print_every) == 0) and step > 1:
                 print('='*100)
                 print('step', step)
                 print('temperature',temperature)
                 if temperature >0.0001:
                     sess.run(model.temperature_update)
-                print('Epoch %d: kb_loss = %.5f (%.3f sec)' % (train_data._epochs_completed, loss_value, duration))
+                print('Epoch %d: Total_loss = %.5f (%.3f sec)' % (train_data._epochs_completed, loss_value, duration))
                 print('Conditional loss: %.5f, Marginal loss: %.5f , Regularization loss: %.5f' % (cond_loss, marg_loss, reg_loss))
-                print('Training Stats:', end='')
+                print('w Stats:', end='')
                 
-                # train_acc = evaluater.accuracy_eval(sess, eval_neg_prob, placeholder, 
-                #                                     train_test_data, data_sets.rel2idx, 
-                #                                     FLAGS, error_file_name)
+                loss_tuple = (loss_value, cond_loss, marg_loss, reg_loss)
                 
-                # train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
-                #                                    train_test_data, data_sets.rel2idx,
-                #                                    FLAGS, error_file_name)
-
-                # Should be calculated on the training data, not the traintest!                
-                train_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
-                                                   train_data, data_sets.rel2idx,
+                # Should be calculated on the subset of training data, not the traintest!                
+                # train_eval is a tuple of (KL, Pearson, Spearman)                
+                train_eval = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
+                                                   train_test_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
-                print("KL & CorrCoeffs:", train_acc, end='')
-                # train_acc_list.append(train_acc)
+                print("Train eval KL & Corr:", train_eval, end='\n')
 
-                kldiv_steps.append(train_acc[0])
-                # corrs_steps.append(train_acc[1])
-                pears_corr_steps.append(train_acc[1])
-                spear_corr_steps.append(train_acc[2])
-
-                # CUSTOM CODE FOR DEV SET CALC
-                dev_err_file = 'dev_' + error_file_name
-                dev_acc = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
-                                                data_sets.dev, data_sets.rel2idx,
-                                                FLAGS, dev_err_file)
+                with open(loss_file, "a") as lfile:
+                    lfile.write(str(loss_tuple)[1:-1] + '\n')
                 
-                kl_dev = dev_acc[0]
-                dev_acc_list.append(kl_dev) # just add the kl-div 
+                with open(eval_file, "a") as efile:
+                    efile.write(str(train_eval)[1:-1] + '\n')
                 
-                print("Accuracy for Devtest: %.5f" % kl_dev)
-                print(i)
-                if kl_dev <= curr_best:
-                    i = 0
-                    curr_best = kl_dev
-                    if FLAGS.save:
-                        save_model(save_model_name, sess, model)
-                elif kl_dev > curr_best and i<50:
-                    i+=1
-                elif i>=50:
-                    sys.exit()
-                
-                # TURNED OFF CALCS for DEVTEST SET for now. Once code is fixed, we can proceed to that
-                # TODO: Have to change it later, just like above function kl_corr_eval
-                # dev2_acc = evaluater.do_eval(sess, eval_neg_prob, placeholder,
-                #                   data_sets.dev, data_sets.devtest, curr_best,
-                #                   FLAGS, error_file_name, data_sets.rel2idx, 
-                #                   data_sets.word2idx)
-                # dev2_acc_list.append(dev2_acc)
-                # print("Accuracy for Devtest: %.5f" % dev2_acc)
+                # Over-write any saved model by the current model
+                if FLAGS.save:
+                    save_model(save_model_name, sess, model)
 
-                # print(i)
-                # if dev2_acc >= curr_best:
-                #     i = 0
-                #     curr_best = dev2_acc
-                #     if FLAGS.save:
-                #         save_model(save_model_name, sess, model)
-                # elif dev2_acc < curr_best and i<50:
-                #     i+=1
-                # elif i>=50:
-                    # sys.exit()
-                # print('current best accurancy: %.5f' %curr_best)
-                # print('Average of dev2 score %.5f' % (np.mean(sorted(dev2_acc_list, reverse = True)[:10])))
+        
+        # DEV SET EVAL -- eval on dev set after training is over!
+        dev_err_file = 'dev_' + error_file_name
+        dev_eval = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
+                                        data_sets.dev, data_sets.rel2idx,
+                                        FLAGS, dev_err_file)
+        
+        # Save the dev set results
+        print("DEV data eval:", dev_eval)
+        dev_res = log_folder + 'dev_results.txt'
+        with open(dev_res, 'w') as dfile:
+            dfile.write(str(dev_eval)[1:-1])
 
-        dev_acc_list = np.asarray(dev_acc_list) # kldvis on dev data       
-        np.save(log_folder + 'devacc_kl.npy', dev_acc_list)
-
-        condloss_list = np.asarray(condloss_list)
-        np.save(log_folder + 'condloss.npy', condloss_list)
-
-        margloss_list = np.asarray(margloss_list)
-        np.save(log_folder + 'margloss.npy', margloss_list)
-
-        kldiv_steps = np.asarray(kldiv_steps)   # kldvis on train data
-        np.save(log_folder + 'kldivs.npy', kldiv_steps)
-
-        pears_corr_steps = np.asarray(pears_corr_steps)
-        np.save(log_folder + 'pears_corrs.npy', pears_corr_steps)
-        spear_corr_steps = np.asarray(spear_corr_steps)
-        np.save(log_folder + 'spear_corrs.npy', spear_corr_steps)
-
-        # print('Average of Top 10 Training Score', np.mean(sorted(kldiv_steps, reverse = True)[:10]))        
-        # opt_idx = np.argmax(np.asarray(dev_acc_list))
-        # print('Epoch', opt_idx)
-        # print('Best Dev Score: %.5f' %dev_acc_list[opt_idx])
-        # print('Average of dev score %.5f' % (np.mean(sorted(dev_acc_list, reverse = True)[:10])))
 
 
 
@@ -253,7 +191,7 @@ def main(argv):
 
 if __name__ == '__main__':
     """basic parameters"""
-    flags.DEFINE_boolean('save', False, 'Save the model')
+    flags.DEFINE_boolean('save', True, 'Save the model')
     flags.DEFINE_integer('random_seed', 20180112, 'random seed for model')
     flags.DEFINE_string('params_file', './params/', 'file to save parameters')
     flags.DEFINE_string('error_file', './error_analysis/', 'dictionary to save error analysis result')
@@ -262,24 +200,12 @@ if __name__ == '__main__':
 
     """dataset parameters"""
     flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
-    # flags.DEFINE_string('train_file', 'wordnet_train.txt', 'which training file to use')
-    # flags.DEFINE_string('train_test_file', 'wordnet_train_test.txt', 'which dev file to use')
-    # flags.DEFINE_string('dev_file', 'wordnet_dev.txt', 'which dev file to use')
-    # flags.DEFINE_string('test_file', 'wordnet_test.txt', 'which test file to use')
-    # flags.DEFINE_string('marg_prob_file', 'count.txt', 'which marginal probability file to use')
 
     flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_test_file', 'movie_train_test.txt', 'which dev file to use')
+    flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
     flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
     flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
     flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
-
-    # flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
-    # flags.DEFINE_string('train_test_file', 'book_train_test.txt', 'which dev file to use')
-    # flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
-    # flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
-    # flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
-
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
     flags.DEFINE_integer('rel_size', 1,
@@ -296,6 +222,7 @@ if __name__ == '__main__':
 
     """tensorflow model parameters"""
     flags.DEFINE_string('model', 'softbox', 'which model to use, poe cube, transe, softbox')
+    flags.DEFINE_boolean('useLossKL', True, 'whether to use KL-div based loss instead of BCE')
     flags.DEFINE_string('measure', 'uniform',
                         'exp or uniform represent for different measure. Attention: for different measure, embedding initialization is different')
     flags.DEFINE_boolean('surrogate_bound', True, 'whether to use upper bound for disjoint functions.')
@@ -321,7 +248,7 @@ if __name__ == '__main__':
 
     """loss parameters"""
     flags.DEFINE_float('w1', 1.0, 'weight on conditional prob loss')
-    flags.DEFINE_float('w2', 0.5, 'weight on marginal prob loss')
+    flags.DEFINE_float('w2', 1.0, 'weight on marginal prob loss')
     flags.DEFINE_float('r1', 0.1, 'regularization parameter to reduce poe to be box-ish') # 0.1 for universe
     flags.DEFINE_string('regularization_method', 'delta', 'method to regularizing the embedding, either delta'
                                                                   'or universe_edge')
@@ -330,7 +257,7 @@ if __name__ == '__main__':
     """training parameters"""
     flags.DEFINE_integer('max_steps', 1000, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 512, 'Batch size. Must divide evenly into the dataset sizes.')
-    flags.DEFINE_integer('print_every', 20, 'Every 20 step, print out the evaluation results')
+    flags.DEFINE_integer('print_every', 10, 'Every 20 step, print out the evaluation results')
     flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
     flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
 

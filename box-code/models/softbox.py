@@ -106,6 +106,12 @@ class tf_model(object):
         # self.cond_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels = self.label, logits=conditional_logits))
         self.cond_loss = -tf.reduce_mean(tf.multiply(conditional_logits, self.label) +
                                          tf.multiply(tf.log(1-tf.exp(conditional_logits)+1e-10), 1-self.label))
+
+        if FLAGS.useLossKL: # Subtract the entropy of labels to make it equivalent to KL
+            self.cond_entropy = -tf.reduce_mean(tf.multiply(tf.log(self.label), self.label) +
+                                            tf.multiply(tf.log(1-self.label+1e-10), (1-self.label+1e-10)))        
+            self.cond_loss -= self.cond_entropy  # make the BCE loss to KL        
+      
         self.cond_loss = FLAGS.w1 * self.cond_loss
 
         """model marg prob loss"""
@@ -134,8 +140,20 @@ class tf_model(object):
             
             self.marginal_probability = tf.constant(data.margina_prob)  
             self.marginal_probability = tf.reshape(self.marginal_probability, [self.vocab_size])
-            self.marg_loss = FLAGS.w2 * tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.marginal_probability,
+
+            self.marg_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.marginal_probability,
                                                                                  logits=self.predicted_marginal_logits))
+
+            # self.marg_loss = -tf.reduce_mean(tf.multiply(self.predicted_marginal_logits, self.marginal_probability) +
+            #                                  tf.multiply(tf.log(1-tf.exp(self.predicted_marginal_logits)+1e-10), 1-self.marginal_probability))
+                                      
+            if FLAGS.useLossKL: # Subtract the entropy of labels to make it equivalent to KL
+                self.marg_entropy = -tf.reduce_mean(tf.multiply(tf.log(self.marginal_probability), self.marginal_probability) +
+                                                tf.multiply(tf.log(1-self.marginal_probability+1e-10), (1-self.marginal_probability+1e-10)))
+                self.marg_loss -= self.marg_entropy  # make the BCE loss to KL        
+
+            self.marg_loss = FLAGS.w2 * self.marg_loss
+
         else:
             self.marg_loss = tf.constant(0.0)
         self.debug = tf.constant(0.0)
