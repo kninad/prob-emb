@@ -56,7 +56,7 @@ def run_training():
 
     exp_name = 'time' + str(datetime.now()) + '_trnfile' + str(FLAGS.train_file) + \
         '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + \
-        '_model' + str(FLAGS.model) + '_bsize' + str(FLAGS.batch_size) + \
+        '_model' + str(FLAGS.model) + '_useKl' + str(FLAGS.useLossKL) + \
         '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps)
 
     exp_name = exp_name.replace(":", "-")
@@ -222,6 +222,7 @@ if __name__ == '__main__':
 
     """tensorflow model parameters"""
     flags.DEFINE_string('model', 'softbox', 'which model to use, poe cube, transe, softbox')
+    flags.DEFINE_boolean('useLossKL', True, 'whether to use KL-div based loss instead of BCE')
     flags.DEFINE_string('measure', 'uniform',
                         'exp or uniform represent for different measure. Attention: for different measure, embedding initialization is different')
     flags.DEFINE_boolean('surrogate_bound', True, 'whether to use upper bound for disjoint functions.')
