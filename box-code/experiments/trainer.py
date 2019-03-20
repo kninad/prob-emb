@@ -199,13 +199,20 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
     """dataset parameters"""
-    flags.DEFINE_string('train_dir', './data', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data/book_data/book_data_4_500', 'Directory to put the data.')
 
-    flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
-    flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
-    flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
-    flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+    # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
+    # flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
+    # flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
+    # flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
+    # flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+
+    flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
+    flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
+    flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
+    flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
+    flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
+
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
     flags.DEFINE_integer('rel_size', 1,
@@ -255,9 +262,9 @@ if __name__ == '__main__':
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 1000, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('max_steps', 300000, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 512, 'Batch size. Must divide evenly into the dataset sizes.')
-    flags.DEFINE_integer('print_every', 10, 'Every 20 step, print out the evaluation results')
+    flags.DEFINE_integer('print_every', 100, 'Every 20 step, print out the evaluation results')
     flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
     flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
 
