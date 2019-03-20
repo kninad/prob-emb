@@ -1,5 +1,6 @@
 */data/*
 *.pyc
 */log/*
+*/params/*
 */error_analysis/*
 */.ipynb_checkpoints/*
