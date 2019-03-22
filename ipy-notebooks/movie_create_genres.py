@@ -197,7 +197,7 @@ def create_vocab_marginal_files(movie_count_matrix, movie_num_users, genre_count
             f.write("%s\n" % gen)
     return 
 
-def create_master_files(movie_count_matrix, genre_count_matrix, datadir):
+def create_master_files(movie_count_matrix, genre_count_matrix, genname_dict, datadir):
     REL = "IsA" 
 
     # MOVIES
@@ -219,6 +219,7 @@ def create_master_files(movie_count_matrix, genre_count_matrix, datadir):
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(mov_tup_list)
 
+
     # GENRES
     print("writing genre master files")
     gen_tup_list = []
@@ -237,6 +238,22 @@ def create_master_files(movie_count_matrix, genre_count_matrix, datadir):
     with open(fname_master, "w") as f:
         writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(gen_tup_list)
+
+
+    # MOVIE - GENRES
+    print("writing movie-genre master files")
+    tup_list = []
+    for movid in genname_dict:
+        genres = genname_dict[movid]
+        for g in genres:
+            tmp_tup = (REL, movid, g, 1.0)
+            tup_list.append(tmp_tup)
+    
+    fname_master = datadir + "movie_genre_master.txt"
+    with open(fname_master, "w") as f:
+        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+        writer.writerows(tup_list)
+
 
     return
 
@@ -264,7 +281,7 @@ def main():
         os.makedirs(datadir)
 
     
-    _, _, genid_counts, id_to_genre = create_final_genres_dict(metdata_file, movId_list)
+    genid_dict, genname_dict, genid_counts, id_to_genre = create_final_genres_dict(metdata_file, movId_list)
     genname_counts = {}   # the count matrix for genres with their names 
     for k,v in genid_counts.items():
         k1, k2 = k
@@ -277,7 +294,7 @@ def main():
     create_vocab_marginal_files(mov_cmatrix, mov_num_users, genname_counts, len(movId_list), datadir)
     
     print("Writing master files")
-    create_master_files(mov_cmatrix, genname_counts, datadir)
+    create_master_files(mov_cmatrix, genname_counts, genname_dict, datadir)
     
     
     # trn_file = datadir + 'movie_train.txt'
