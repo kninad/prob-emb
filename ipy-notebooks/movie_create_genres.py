@@ -266,7 +266,9 @@ def main():
     t_users = int(sys.argv[2])        
 
     rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'    
-    rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'
+    # rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'  # SMALL RATINGS FILE
+    rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings.csv'    # FULL RATINGS FILE
+
     metdata_file = rootdir + 'datasets/the-movies-dataset/movies_metadata.csv'  # for the genres
     datadir = rootdir + 'prob-emb/box-code/data/movie_data/movie_data_' + str(t_rating) + '_' + str(t_users) + '_taxonomy/'
     

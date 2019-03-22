@@ -227,8 +227,9 @@ def main():
     t_users = int(sys.argv[2])    
     splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
 
-    rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'    
-    rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'
+    rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'        
+    # rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'  # SMALL RATINGS FILE
+    rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings.csv'    # FULL RATINGS FILE
     datadir = rootdir + 'prob-emb/box-code/data/movie_data/movie_data_' + str(t_rating) + '_' + str(t_users) + '/'
     
     final_dict = create_final_dict(rawdata_file, t_rating, t_users)
