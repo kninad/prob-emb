@@ -5,6 +5,8 @@ import itertools
 import ast
 import numpy as np 
 import pandas as pd
+import pickle
+import sys
 
 # def get_df_from_csv(DATADIR, filename):
 #     csv_file = DATADIR + filename
@@ -108,12 +110,12 @@ def create_vocab_marginal_files(count_matrix, num_users, datadir):
             marginals.append(marginal_prob(k1, count_matrix, num_users))
 
     # Write out the lists to text files
-    fname_marginals = datadir + "marginals.txt"
+    fname_marginals = datadir + "movie_marginal_prob.txt"
     with open(fname_marginals, "w") as f:
         for prob in marginals:
             f.write("%s\n" % prob)
 
-    fname_vocab = datadir + "movie_vocab.txt"
+    fname_vocab = datadir + "vocabulary.txt"
     with open(fname_vocab, "w") as f:
         for movid in movieid_vocab:
             f.write("%s\n" % movid)
@@ -197,12 +199,38 @@ def create_trndevtst_files(count_matrix, splits, datadir):
     return
 
 
+def create_trneval_file(train_file, train_eval_file, percentage):
+    
+#     train_file = outputdir + "movie_train.txt"
+#     train_eval_file = outputdir + "movie_train_eval.txt"
+#     percentage = 10
+
+    with open(train_file, "r") as f:
+        lines = f.readlines()
+
+    count = len(lines)*percentage//100
+    t = 2*np.random.choice(len(lines)//2, count//2, replace=False)
+
+    print("Selecting %d%% of train data as eval content (%d rows)."%(percentage, count))
+    with open(train_eval_file, "w") as f:
+        for i in t:
+            f.write(lines[i])
+            f.write(lines[i+1])
+    print("Finished writing to file:", train_eval_file)
+    return
+
+
 def main():
-    t_rating = 4
-    t_users = 100
+    # t_rating = 4
+    # t_users = 100
+    t_rating = int(sys.argv[1])
+    t_users = int(sys.argv[2])
+    name = str(sys.argv[3])
     splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
-    datadir = 'clean_data_movie_' + str(t_rating) + '_' + str(t_users) + '/'
-    rawdata_file = '../../data/the-movies-dataset/ratings_small.csv'
+
+    rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/prob-emb/box-code/data/movie_data/'    
+    rawdata_file = '../datasets/the-movies-dataset/ratings_small.csv'
+    datadir = rootdir + 'movie_data_' + str(t_rating) + '_' + str(t_users) + '/'
     
     final_dict = create_final_dict(rawdata_file, t_rating, t_users)
     num_users = get_total_users(final_dict)
@@ -214,6 +242,10 @@ def main():
     
     create_vocab_marginal_files(cmatrix, num_users, datadir)
     create_trndevtst_files(cmatrix, splits, datadir)
+    
+    # trn_file = datadir + 'movie_train.txt'
+    # trn_eval_file = datadir + 'movie_train_eval.txt'
+    # create_trneval_file(trn_file, trn_eval_file, 10)
 
 
 if __name__ == "__main__":
