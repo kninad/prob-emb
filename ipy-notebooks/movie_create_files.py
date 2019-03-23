@@ -224,9 +224,10 @@ def main():
     # t_rating = 4
     # t_users = 100
     t_rating = float(sys.argv[1])
-    t_users = float(sys.argv[2])    
+    t_users = int(sys.argv[2])    
     splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
 
+    # rootdir = '/home/nkhargonkar/dsis/'
     rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'        
     # rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'  # SMALL RATINGS FILE
     rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings.csv'    # FULL RATINGS FILE

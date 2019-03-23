@@ -219,18 +219,22 @@ def main():
     # t_rating = 4
     # t_users = 100
     t_rating = float(sys.argv[1])
-    t_users = float(sys.argv[2])    
+    t_users = int(sys.argv[2])    
     splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
 
+    # rootdir = '/home/nkhargonkar/dsis/'
     rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'    
     # rawdata_file = rootdir + 'datasets/goodbooks-10k-master/samples/ratings.csv'
     rawdata_file = rootdir + 'datasets/goodbooks-10k-master/ratings.csv'
     datadir = rootdir + 'prob-emb/box-code/data/book_data/book_data_' + str(t_rating) + '_' + str(t_users) + '/'
     
+    print(datadir)
+    print(t_rating, t_users)
+
     final_dict = create_final_dict(rawdata_file, t_rating, t_users)
     num_users = get_total_users(final_dict)
     cmatrix = create_count_matrix(final_dict)
-    del(final_dict)
+    del(final_dict)    
     
     if not os.path.exists(datadir):
         os.makedirs(datadir)

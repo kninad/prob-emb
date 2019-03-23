@@ -80,6 +80,7 @@ def get_genres(genres_json, id_to_genre):
     
     return ids_list, gen_list, id_to_genre
 
+
 def create_final_genres_dict(csv_file, movIdsList):    
     df_meta = pd.read_csv(csv_file, delimiter=',')    
     df_meta = df_meta[['genres', 'id']]
@@ -183,7 +184,7 @@ def create_vocab_marginal_files(movie_count_matrix, movie_num_users, genre_count
         k1, k2 = key_pair
         if k1 == k2:        
             gen_vocab.append(k1)
-            gen_marginals.append(marginal_prob(k1, genre_count_matrix, movie_num_users))
+            gen_marginals.append(marginal_prob(k1, genre_count_matrix, genre_num_users))
 
     # Write out the lists to text files
     fname_gen_marginals = datadir + "genre_marginal_prob.txt"
@@ -196,6 +197,7 @@ def create_vocab_marginal_files(movie_count_matrix, movie_num_users, genre_count
         for gen in gen_vocab:
             f.write("%s\n" % gen)
     return 
+
 
 def create_master_files(movie_count_matrix, genre_count_matrix, genname_dict, datadir):
     REL = "IsA" 
@@ -263,15 +265,20 @@ def main():
     # t_rating = 4
     # t_users = 100
     t_rating = float(sys.argv[1])
-    t_users = float(sys.argv[2])        
+    t_users = int(sys.argv[2])        
 
+    # rootdir = '/home/nkhargonkar/dsis/'
     rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'    
+  
     # rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'  # SMALL RATINGS FILE
     rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings.csv'    # FULL RATINGS FILE
 
     metdata_file = rootdir + 'datasets/the-movies-dataset/movies_metadata.csv'  # for the genres
     datadir = rootdir + 'prob-emb/box-code/data/movie_data/movie_data_' + str(t_rating) + '_' + str(t_users) + '_taxonomy/'
-    
+
+    print(datadir)
+    print(t_rating, t_users)
+
     final_dict = create_final_mov_dict(rawdata_file, t_rating, t_users)
     mov_num_users = get_total_users(final_dict)
     mov_cmatrix = create_count_matrix(final_dict)
