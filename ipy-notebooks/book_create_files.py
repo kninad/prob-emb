@@ -218,8 +218,8 @@ def create_trneval_file(train_file, train_eval_file, percentage):
 def main():
     # t_rating = 4
     # t_users = 100
-    t_rating = int(sys.argv[1])
-    t_users = int(sys.argv[2])    
+    t_rating = float(sys.argv[1])
+    t_users = float(sys.argv[2])    
     splits = [0.8, 0.1, 0.1]    # the trn, dev and tst splits of data
 
     rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'    

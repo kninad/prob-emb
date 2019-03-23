@@ -262,8 +262,8 @@ def create_master_files(movie_count_matrix, genre_count_matrix, genname_dict, da
 def main():
     # t_rating = 4
     # t_users = 100
-    t_rating = int(sys.argv[1])
-    t_users = int(sys.argv[2])        
+    t_rating = float(sys.argv[1])
+    t_users = float(sys.argv[2])        
 
     rootdir = '/home/ninad/Desktop/Link-to-sem4/dsis/'    
     # rawdata_file = rootdir + 'datasets/the-movies-dataset/ratings_small.csv'  # SMALL RATINGS FILE
