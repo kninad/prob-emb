@@ -165,9 +165,9 @@ def run_training():
                 with open(eval_file, "a") as efile:
                     efile.write(str(train_eval)[1:-1] + '\n')
                 
-                # Over-write any saved model by the current model
-                if FLAGS.save:
-                    save_model(save_model_name, sess, model)
+                # # Over-write any saved model by the current model
+                # if FLAGS.save:
+                #     save_model(save_model_name, sess, model)
 
         
         # DEV SET EVAL -- eval on dev set after training is over!
@@ -199,14 +199,14 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
     """dataset parameters"""
-    # flags.DEFINE_string('train_dir', './data/book_data/book_data_4_500', 'Directory to put the data.')
-    flags.DEFINE_string('train_dir', './data/movie_data/movie_data_4.5_500_taxonomy', 'Directory to put the data.')
+    # flags.DEFINE_string('train_dir', './data/book_data/book_data_4.5_500_taxonomy', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data/movie_data/small/', 'Directory to put the data.')
 
     flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
     flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
     flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
-    flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+    flags.DEFINE_string('marg_prob_file', 'movie_marginal_prob.txt', 'which marginal probability file to use')
 
     # flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
@@ -248,7 +248,7 @@ if __name__ == '__main__':
 
     """optimization parameters"""
     flags.DEFINE_string('optimizer', 'adam', 'which optimizer to use: adam or sgd')
-    flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
+    flags.DEFINE_float('learning_rate', 0.1, 'Initial learning rate.')
 
     flags.DEFINE_float('epsilon', 1e-8, 'Optimizer epsilon')
     flags.DEFINE_float('softfreeze', '0.0', 'whether to use soft gradient on neg delta embedding')
@@ -256,18 +256,18 @@ if __name__ == '__main__':
 
     """loss parameters"""
     flags.DEFINE_float('w1', 1.0, 'weight on conditional prob loss')
-    flags.DEFINE_float('w2', 1.0, 'weight on marginal prob loss')
+    flags.DEFINE_float('w2', 0.0, 'weight on marginal prob loss')
     flags.DEFINE_float('r1', 0.1, 'regularization parameter to reduce poe to be box-ish') # 0.1 for universe
     flags.DEFINE_string('regularization_method', 'delta', 'method to regularizing the embedding, either delta'
                                                                   'or universe_edge')
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 300000, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('max_steps', 20000, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 512, 'Batch size. Must divide evenly into the dataset sizes.')
     flags.DEFINE_integer('print_every', 100, 'Every 20 step, print out the evaluation results')
-    flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
-    flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
+    flags.DEFINE_integer('embed_dim', 2, 'word embedding dimension')
+    flags.DEFINE_boolean('overfit', True, 'Over fit the dev data to check model')
 
 
     """evalution and error analysis parameters"""
