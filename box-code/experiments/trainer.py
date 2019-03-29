@@ -67,6 +67,8 @@ def run_training():
 
     loss_file = log_folder + 'losses.txt'
     eval_file = log_folder + 'evals.txt'
+    viz_dict_file = log_folder + 'viz_dict.npy'
+    viz_dict = {} # key: epoch_item1_item2, val: conditional prop
 
     curr_best = np.inf  # maximum value for kl-divergence
 
@@ -123,8 +125,7 @@ def run_training():
             train_feed_dict = feeder.fill_feed_dict(train_data, placeholder, data_sets.rel2idx, FLAGS.batch_size)
             if FLAGS.marginal_method == 'softplus' or FLAGS.model == 'box':
                 sess.run([model.project_op], feed_dict=train_feed_dict)
-            _ , cond_loss, marg_loss, reg_loss, loss_value, temperature, summary = sess.run([train_op, model.cond_loss, model.marg_loss,
-                                                                                model.regularization, model.loss, model.temperature, summary_op],
+            _ , cond_loss, marg_loss, reg_loss, loss_value, temperature, summary = sess.run([train_op, model.cond_loss, model.marg_loss, model.regularization, model.loss, model.temperature, summary_op],
                                                                                feed_dict=train_feed_dict)
             
             # grad_norm_list.append(grad_norm)
@@ -153,7 +154,7 @@ def run_training():
                 loss_tuple = (loss_value, cond_loss, marg_loss, reg_loss)
                 
                 # Should be calculated on the subset of training data, not the traintest!                
-                # train_eval is a tuple of (KL, Pearson, Spearman)                
+                # train_eval is a tuple of (KL, Pearson, Spearman)
                 train_eval = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
                                                    train_test_data, data_sets.rel2idx,
                                                    FLAGS, error_file_name)
@@ -169,7 +170,12 @@ def run_training():
                 if FLAGS.save:
                     save_model(save_model_name, sess, model)
 
-        
+            if FLAGS.visualize:
+            # Process data for visualizing confusion matrix and rectangle plots
+                viz_dict = evaluater.visualization(sess, model, viz_dict,
+                                                   train_feed_dict,
+                                                   train_data._epochs_completed)
+
         # DEV SET EVAL -- eval on dev set after training is over!
         dev_err_file = 'dev_' + error_file_name
         dev_eval = evaluater.kl_corr_eval(sess, eval_neg_prob, placeholder,
@@ -182,6 +188,10 @@ def run_training():
         with open(dev_res, 'w') as dfile:
             dfile.write(str(dev_eval)[1:-1])
 
+        print("Saved viz dict to file:", viz_dict_file)
+        np.save(viz_dict_file, viz_dict)
+        np.save(log_folder+"word2idx.npy", data_sets.word2idx)
+        np.save(log_folder+"idx2word.npy", data_sets.idx2word)
 
 
 
@@ -199,19 +209,20 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
     """dataset parameters"""
-    flags.DEFINE_string('train_dir', './data/book_data/book_data_4_500', 'Directory to put the data.')
+    # flags.DEFINE_string('train_dir', './data/book_data/book_data_4_500', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data/movie_data/movie_data_4.5_500_taxonomy', 'Directory to put the data.')
 
-    # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
-    # flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
-    # flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
-    # flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
-    # flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+    flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
+    flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
+    flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
+    flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
+    flags.DEFINE_string('marg_prob_file', 'movie_marginal_prob.txt', 'which marginal probability file to use')
 
-    flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
-    flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
-    flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
-    flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
+    # flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
+    # flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
+    # flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
+    # flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
+    # flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
 
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
@@ -275,5 +286,6 @@ if __name__ == '__main__':
     flags.DEFINE_boolean('error_analysis', False, 'do error analysis for evaluation data')
     flags.DEFINE_string('eval', 'acc', 'evaluate on MAP, acc or taxo')
     flags.DEFINE_boolean('debug', False , 'whether in debug mode')
+    flags.DEFINE_boolean('visualize', True, 'process training data to generate plots')
 
     tf.app.run()
