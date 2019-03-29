@@ -209,14 +209,14 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
     """dataset parameters"""
-    # flags.DEFINE_string('train_dir', './data/book_data/book_data_4_500', 'Directory to put the data.')
-    flags.DEFINE_string('train_dir', './data/movie_data/movie_data_4.5_500_taxonomy', 'Directory to put the data.')
+    # flags.DEFINE_string('train_dir', './data/book_data/book_data_4.5_500_taxonomy', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data/movie_data/small/', 'Directory to put the data.')
 
     flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
     flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
     flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
     flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
-    flags.DEFINE_string('marg_prob_file', 'marginals.txt', 'which marginal probability file to use')
+    flags.DEFINE_string('marg_prob_file', 'movie_marginal_prob.txt', 'which marginal probability file to use')
 
     # flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
     # flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
