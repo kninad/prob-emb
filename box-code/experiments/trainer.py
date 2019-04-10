@@ -54,10 +54,9 @@ def run_training():
     #            '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
     #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
 
-    exp_name = 'time' + str(datetime.now()) + '_trnfile' + str(FLAGS.train_file) + \
-        '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + \
-        '_model' + str(FLAGS.model) + '_useKl' + str(FLAGS.useLossKL) + \
-        '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps)
+    exp_name = 'time' + str(datetime.now()) + '_TRN' + str(FLAGS.train_file) + \
+         '_EmbInit' + str(FLAGS.init_embedding) + '_useKl' + str(FLAGS.useLossKL)  + '_steps' + str(FLAGS.max_steps)
+        # '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + '_model' + str(FLAGS.model) + '_dim' + str(FLAGS.embed_dim)
 
     exp_name = exp_name.replace(":", "-")
     print('experiment file name:-', exp_name)
