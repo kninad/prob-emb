@@ -111,13 +111,15 @@ def read_data_sets(FLAGS, dtype=tf.float32):
 
     # if embeddings are initialized using pre trained model, then read them in
     if FLAGS.init_embedding == 'pre_train':
-        # trained_model = pickle.load(open(FLAGS.init_embedding_file, "rb"))
+        trained_model = pickle.load(open(FLAGS.init_embedding_file, "rb"))
         # min_embed = trained_model['embeddings']
         # delta_embed = trained_model['imag_embeddings']
-        # data_sets.min_embed = min_embed
-        # data_sets.delta_embed = delta_embed
-        data_sets.min_embed = read_txt_embed(train_dir+'/tiny_test_min.txt')
-        data_sets.delta_embed = read_txt_embed(train_dir+'/tiny_test_delta.txt')
+        min_embed = trained_model['min_embeddings']
+        delta_embed = trained_model['delta_embeddings']
+        data_sets.min_embed = min_embed
+        data_sets.delta_embed = delta_embed
+        # data_sets.min_embed = read_txt_embed(train_dir+'/tiny_test_min.txt')
+        # data_sets.delta_embed = read_txt_embed(train_dir+'/tiny_test_delta.txt')
 
     # if evaluation method is taxonomy evaluation which may be used when evaluate wordnet data, then read all taxo eval related stuff in.
     if FLAGS.eval == 'taxo':
