@@ -139,38 +139,38 @@ def kl_corr_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_
     return kldiv_mean, pears_corr, spear_corr
 
 
-def visualization(sess, model, viz_dict, train_feed_dict, epochs):
-    neg_conditional_logits = sess.run(model.eval_prob, feed_dict=train_feed_dict)
-    cond_prop = np.exp(-neg_conditional_logits)
-    marginal_prob = sess.run(model.marginal_probability, feed_dict=train_feed_dict)
+# def visualization(sess, model, viz_dict, train_feed_dict, epochs):
+#     neg_conditional_logits = sess.run(model.eval_prob, feed_dict=train_feed_dict)
+#     cond_prop = np.exp(-neg_conditional_logits)
+#     marginal_prob = sess.run(model.marginal_probability, feed_dict=train_feed_dict)
 
-    t1x, t1_min_embed, t1_max_embed = sess.run([model.t1x, model.t1_min_embed,
-                                               model.t1_max_embed],
-                                               feed_dict=train_feed_dict)
+#     t1x, t1_min_embed, t1_max_embed = sess.run([model.t1x, model.t1_min_embed,
+#                                                model.t1_max_embed],
+#                                                feed_dict=train_feed_dict)
 
-    t2x, t2_min_embed, t2_max_embed = sess.run([model.t2x, model.t2_min_embed,
-                                               model.t2_max_embed],
-                                               feed_dict=train_feed_dict)
-    max_Id = 5
-    for i in range(len(t1x)):
-        id1, id2 = t1x[i][0], t2x[i][0]
-        if id1 <= max_Id and id2 <= max_Id:
-            viz_dict[(epochs, id1, id2)] = (cond_prop[i], marginal_prob[id1],
-                                            t1_min_embed[i], t1_max_embed[i],
-                                            marginal_prob[id2], t2_min_embed[i],
-                                            t2_max_embed[i])
+#     t2x, t2_min_embed, t2_max_embed = sess.run([model.t2x, model.t2_min_embed,
+#                                                model.t2_max_embed],
+#                                                feed_dict=train_feed_dict)
+#     max_Id = 5
+#     for i in range(len(t1x)):
+#         id1, id2 = t1x[i][0], t2x[i][0]
+#         if id1 <= max_Id and id2 <= max_Id:
+#             viz_dict[(epochs, id1, id2)] = (cond_prop[i], marginal_prob[id1],
+#                                             t1_min_embed[i], t1_max_embed[i],
+#                                             marginal_prob[id2], t2_min_embed[i],
+#                                             t2_max_embed[i])
 
-    # For POE Uncomment below and comment above
-    # t1x = sess.run([model.t1x], feed_dict=train_feed_dict)
-    #
-    # t2x = sess.run([model.t2x], feed_dict=train_feed_dict)
-    # max_Id = 5
-    # for i in range(len(t1x[0])):
-    #     id1, id2 = t1x[0][i][0], t2x[0][i][0]
-    #     if id1 <= max_Id and id2 <= max_Id:
-    #         viz_dict[(epochs, id1, id2)] = (cond_prop[i], 0, 0, 0, 0, 0, 0)
+#     # For POE Uncomment below and comment above
+#     # t1x = sess.run([model.t1x], feed_dict=train_feed_dict)
+#     #
+#     # t2x = sess.run([model.t2x], feed_dict=train_feed_dict)
+#     # max_Id = 5
+#     # for i in range(len(t1x[0])):
+#     #     id1, id2 = t1x[0][i][0], t2x[0][i][0]
+#     #     if id1 <= max_Id and id2 <= max_Id:
+#     #         viz_dict[(epochs, id1, id2)] = (cond_prop[i], 0, 0, 0, 0, 0, 0)
 
-    return viz_dict
+#     return viz_dict
 
 
 def dev_eval(sess, error, placeholder, data_set, rel2idx, FLAGS, error_file_name):

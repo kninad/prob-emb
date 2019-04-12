@@ -88,6 +88,7 @@ def get_count(filename):
 def convertToIndex(e, word2idx, rel2idx):
     if len(e) > 1:
         (r, t1, t2, s) = e
+        # print e
         # we want to seperate them because sometimes words are phrases, need multiple lookups in one term
         return (lookupRelIDX(rel2idx, r), lookupwordID(word2idx, t1), lookupwordID(word2idx, t2), float(s))
     else:
@@ -112,6 +113,7 @@ def lookupwordID(words, w):
         if (array[i] in words):
             result.append(words[array[i]])
         else:
+            # print(w)
             result.append(words['UUUNKKK'])
     return result
 

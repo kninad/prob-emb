@@ -54,10 +54,9 @@ def run_training():
     #            '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
     #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
 
-    exp_name = 'time' + str(datetime.now()) + '_trnfile' + str(FLAGS.train_file) + \
-        '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + \
-        '_model' + str(FLAGS.model) + '_useKl' + str(FLAGS.useLossKL) + \
-        '_dim' + str(FLAGS.embed_dim) + '_steps' + str(FLAGS.max_steps)
+    exp_name = 'time' + str(datetime.now()) + '_TRN' + str(FLAGS.train_file) + \
+         '_EmbInit' + str(FLAGS.init_embedding) + '_useKl' + str(FLAGS.useLossKL)  + '_steps' + str(FLAGS.max_steps)
+        # '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + '_model' + str(FLAGS.model) + '_dim' + str(FLAGS.embed_dim)
 
     exp_name = exp_name.replace(":", "-")
     print('experiment file name:-', exp_name)
@@ -167,8 +166,8 @@ def run_training():
                     efile.write(str(train_eval)[1:-1] + '\n')
                 
                 # # Over-write any saved model by the current model
-                # if FLAGS.save:
-                #     save_model(save_model_name, sess, model)
+                if FLAGS.save:
+                    save_model(save_model_name, sess, model)
 
             if FLAGS.visualize:
             # Process data for visualizing confusion matrix and rectangle plots
@@ -187,11 +186,12 @@ def run_training():
         dev_res = log_folder + 'dev_results.txt'
         with open(dev_res, 'w') as dfile:
             dfile.write(str(dev_eval)[1:-1])
-
-        print("Saved viz dict to file:", viz_dict_file)
-        np.save(viz_dict_file, viz_dict)
-        np.save(log_folder+"word2idx.npy", data_sets.word2idx)
-        np.save(log_folder+"idx2word.npy", data_sets.idx2word)
+        
+        if FLAGS.visualize:
+            print("Saved viz dict to file:", viz_dict_file)
+            np.save(viz_dict_file, viz_dict)
+            np.save(log_folder+"word2idx.npy", data_sets.word2idx)
+            np.save(log_folder+"idx2word.npy", data_sets.idx2word)
 
 
 
@@ -209,20 +209,20 @@ if __name__ == '__main__':
     flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
     """dataset parameters"""
-    # flags.DEFINE_string('train_dir', './data/book_data/book_data_4.5_500_taxonomy', 'Directory to put the data.')
-    flags.DEFINE_string('train_dir', './data/movie_data/small/', 'Directory to put the data.')
+    flags.DEFINE_string('train_dir', './data/book_data/book_data_4.5_500_taxonomy', 'Directory to put the data.')
+    # flags.DEFINE_string('train_dir', './data/movie_data/small/', 'Directory to put the data.')
 
-    flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
-    flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
-    flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
-    flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
-    flags.DEFINE_string('marg_prob_file', 'movie_marginal_prob.txt', 'which marginal probability file to use')
+    # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
+    # flags.DEFINE_string('train_test_file', 'movie_train_eval.txt', 'which eval file to use')
+    # flags.DEFINE_string('dev_file', 'movie_dev.txt', 'which dev file to use')
+    # flags.DEFINE_string('test_file', 'movie_test.txt', 'which test file to use')
+    # flags.DEFINE_string('marg_prob_file', 'movie_marginal_prob.txt', 'which marginal probability file to use')
 
-    # flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
-    # flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
-    # flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
-    # flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
-    # flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
+    flags.DEFINE_string('train_file', 'book_train.txt', 'which training file to use')
+    flags.DEFINE_string('train_test_file', 'book_train_eval.txt', 'which eval file to use')
+    flags.DEFINE_string('dev_file', 'book_dev.txt', 'which dev file to use')
+    flags.DEFINE_string('test_file', 'book_test.txt', 'which test file to use')
+    flags.DEFINE_string('marg_prob_file', 'book_marginal_prob.txt', 'which marginal probability file to use')
 
 
     flags.DEFINE_string('neg', 'pre_neg', 'uniformly generate negative examples or use pre generated negative examplse')
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
     """optimization parameters"""
     flags.DEFINE_string('optimizer', 'adam', 'which optimizer to use: adam or sgd')
-    flags.DEFINE_float('learning_rate', 0.1, 'Initial learning rate.')
+    flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
 
     flags.DEFINE_float('epsilon', 1e-8, 'Optimizer epsilon')
     flags.DEFINE_float('softfreeze', '0.0', 'whether to use soft gradient on neg delta embedding')
@@ -266,18 +266,18 @@ if __name__ == '__main__':
 
     """loss parameters"""
     flags.DEFINE_float('w1', 1.0, 'weight on conditional prob loss')
-    flags.DEFINE_float('w2', 0.0, 'weight on marginal prob loss')
+    flags.DEFINE_float('w2', 0.5, 'weight on marginal prob loss')
     flags.DEFINE_float('r1', 0.1, 'regularization parameter to reduce poe to be box-ish') # 0.1 for universe
     flags.DEFINE_string('regularization_method', 'delta', 'method to regularizing the embedding, either delta'
                                                                   'or universe_edge')
     flags.DEFINE_string('marginal_method', 'universe', 'softplus, universe or sigmoid')
 
     """training parameters"""
-    flags.DEFINE_integer('max_steps', 20000, 'Number of steps to run trainer.')
+    flags.DEFINE_integer('max_steps', 2000, 'Number of steps to run trainer.')
     flags.DEFINE_integer('batch_size', 512, 'Batch size. Must divide evenly into the dataset sizes.')
     flags.DEFINE_integer('print_every', 100, 'Every 20 step, print out the evaluation results')
-    flags.DEFINE_integer('embed_dim', 2, 'word embedding dimension')
-    flags.DEFINE_boolean('overfit', True, 'Over fit the dev data to check model')
+    flags.DEFINE_integer('embed_dim', 50, 'word embedding dimension')
+    flags.DEFINE_boolean('overfit', False, 'Over fit the dev data to check model')
 
 
     """evalution and error analysis parameters"""
@@ -286,6 +286,6 @@ if __name__ == '__main__':
     flags.DEFINE_boolean('error_analysis', False, 'do error analysis for evaluation data')
     flags.DEFINE_string('eval', 'acc', 'evaluate on MAP, acc or taxo')
     flags.DEFINE_boolean('debug', False , 'whether in debug mode')
-    flags.DEFINE_boolean('visualize', True, 'process training data to generate plots')
+    flags.DEFINE_boolean('visualize', False, 'process training data to generate plots')
 
     tf.app.run()
