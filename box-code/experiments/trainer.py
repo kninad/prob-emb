@@ -54,11 +54,12 @@ def run_training():
     #            '_cube_eps' + str(FLAGS.cube_eps) + '_steps' + str(FLAGS.max_steps) + '_softfreeze' + str(
     #     FLAGS.softfreeze) + '_r1' + str(FLAGS.r1) + '_paireval' + str(FLAGS.pair_eval)
 
-    exp_name = 'time' + str(datetime.now()) + '_TRN' + str(FLAGS.train_file) + \
-         '_EmbInit' + str(FLAGS.init_embedding) + '_useKl' + str(FLAGS.useLossKL)  + '_steps' + str(FLAGS.max_steps)
-        # '_w1_' + str(FLAGS.w1) + '_w2_' + str(FLAGS.w2) + '_r1_' + str(FLAGS.r1) + '_model' + str(FLAGS.model) + '_dim' + str(FLAGS.embed_dim)
+    exp_name = 'time' + str(datetime.now()) + '_EXP' + str(FLAGS.train_dir) + \
+    '_w1' + str(FLAGS.w1) + '_w2' + str(FLAGS.w2) + '_r1' + str(FLAGS.r1) + \
+    '_dim' + str(FLAGS.embed_dim) + '_lr' + str(FLAGS.learning_rate)
 
     exp_name = exp_name.replace(":", "-")
+    exp_name = exp_name.replace("/", "-")
     print('experiment file name:-', exp_name)
     error_file_name = FLAGS.error_file + exp_name + '.txt'
     save_model_name = FLAGS.params_file + exp_name + '.pkl'
@@ -208,8 +209,8 @@ if __name__ == '__main__':
     flags.DEFINE_string('ouput_file', './result/', 'print the result to this file')
     flags.DEFINE_string('log_file', './log/', 'tensorboard log files')
 
-    """dataset parameters"""
-    flags.DEFINE_string('train_dir', './data/book_data/book_data_4.5_500_taxonomy', 'Directory to put the data.')
+    """dataset parameters""" 
+    flags.DEFINE_string('train_dir', './data/book_data/exp1.1_pretrn_ext', 'Directory to put the data.')
     # flags.DEFINE_string('train_dir', './data/movie_data/small/', 'Directory to put the data.')
 
     # flags.DEFINE_string('train_file', 'movie_train.txt', 'which training file to use')
