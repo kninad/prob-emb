@@ -1,4 +1,8 @@
-
+"""
+Main Training file for the Gensim Poincare Model
+From the supplied arguments, loads a dataset, trains
+and then saves the logs, params and args to appropriate folders
+"""
 import os
 import sys
 import logging
@@ -18,13 +22,14 @@ from utils import data_loader
 
 def train_run(args):
     # create experiment name from args
-    # create log folder from exp name
-    # save model from exp name
+    # create log folder, params folder from exp name
+    # Start logging in exp log folder
+    # save trained model in exp params folder
     
     exp_name = 'HB'+'time' + str(datetime.now()) + '_EXP' + str(args.train_dir) + \
     '_prbt' + str(args.prob_threshold) + '_reg' + str(args.reg_coef) + \
     '_dim' + str(args.embed_dim) + '_lr' + str(args.learning_rate) + \
-    '_epoc' + str(args.epochs) + '_burnin' + str(args.burn_in)
+    '_neg' + str(args.neg_samples) + '_epoc' + str(args.epochs) + '_burnin' + str(args.burn_in)
 
     exp_name = exp_name.replace(":", "-")
     exp_name = exp_name.replace("/", "-")
@@ -57,8 +62,13 @@ def train_run(args):
     model.train(epochs=args.epochs, batch_size=args.batch_size, print_every=args.print_every)
     
     # Save the model
-    model_save_name = exp_params_folder + 'model_params.pkl'
-    model.save(model_save_name)
+    model_save_name = exp_params_folder + 'gensim_model.params'
+    model.save(model_save_name)    
+    
+    # Save the arguments in the params folder
+    args_fname = exp_params_folder + 'args_model.pkl'
+    with open(args_fname, "wb") as f:
+        pickle.dump(args, f)
     
     return
 
