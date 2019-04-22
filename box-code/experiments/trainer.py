@@ -62,13 +62,21 @@ def run_training():
     exp_name = exp_name.replace("/", "-")
     print('experiment file name:-', exp_name)
     error_file_name = FLAGS.error_file + exp_name + '.txt'
-    save_model_name = FLAGS.params_file + exp_name + '.pkl'
+    save_model_name = FLAGS.params_file + exp_name.split("_EXP.-")[1] + '.pkl'
     log_folder = FLAGS.log_file + exp_name + '/'
 
     loss_file = log_folder + 'losses.txt'
     eval_file = log_folder + 'evals.txt'
+    dev_res = log_folder + 'dev_results.txt'
     viz_dict_file = log_folder + 'viz_dict.npy'
     viz_dict = {} # key: epoch_item1_item2, val: conditional prop
+
+    if FLAGS.init_embedding == "pre_train":
+        loss_file = log_folder + 'pre_train_losses.txt'
+        eval_file = log_folder + 'pre_train_evals.txt'
+        dev_res = log_folder + 'pre_train_dev_results.txt'
+        if not FLAGS.init_embedding_file:
+            FLAGS.init_embedding_file = save_model_name
 
     curr_best = np.inf  # maximum value for kl-divergence
 
@@ -184,7 +192,6 @@ def run_training():
         
         # Save the dev set results
         print("DEV data eval:", dev_eval)
-        dev_res = log_folder + 'dev_results.txt'
         with open(dev_res, 'w') as dfile:
             dfile.write(str(dev_eval)[1:-1])
         
@@ -235,8 +242,7 @@ if __name__ == '__main__':
     """init parameters"""
     flags.DEFINE_string('init_embedding', 'random',
                         'whether to use pre trained min word embedding to init. pre_train or random')
-    flags.DEFINE_string('init_embedding_file',
-                        '../params/train_datawordnettrain_nameisacubesoftmaxtermFalsefreeze_gradFalsetuple_modelavenegpre_negmodelpoe_measureuniform_w11.0_w210.0_learning_rate0.001_batchsize459776_dim50_steps100000.pkl',
+    flags.DEFINE_string('init_embedding_file', '',
                         'if choose pre_train at init_embedding, specify which embedding you want to use')
 
     """tensorflow model parameters"""
