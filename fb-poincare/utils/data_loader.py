@@ -39,7 +39,7 @@ def get_data_list(data_filepath, prob_threshold):
     return data_list
     
 
-def get_mod_data(data_filepath, prob_threshold):
+def get_mod_data(data_filepath, prob_threshold=0.01):
     """Function to create a list of training tuples. It is according
     to the training data format specified for the poincare model.
     
@@ -61,7 +61,9 @@ def get_mod_data(data_filepath, prob_threshold):
     # data_list = []    
     df = pd.read_csv(data_filepath, header=None, delimiter='\t', usecols=[1,2,3])
     df.columns = ['id1', 'id2', 'weight']
-    outFile = data_filepath + "_hb.csv"
+    df = df[df.weight >= prob_threshold]
+    index = data_filepath.find('.txt')
+    outFile = data_filepath[:index] + "_hb.csv"
     df.to_csv(outFile, sep=',', index=False)
     
     return None
