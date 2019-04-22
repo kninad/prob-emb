@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 
-def get_data_list(data_filepath, prob_threshold, outFile="output.txt"):
+def get_data_list(data_filepath, prob_threshold):
     """Function to create a list of training tuples. It is according
     to the training data format specified for the poincare model.
     
@@ -30,9 +30,10 @@ def get_data_list(data_filepath, prob_threshold, outFile="output.txt"):
     # drop the 3rd column now., since no use
     df.drop('cond_prob', axis=1, inplace=True)
     data_list = list(df.itertuples(index=False, name=None))
+    outFile = data_filepath + "_HBoutput.txt"
     with open(outFile, "w") as out:
         for row in data_list:
-            out.write("%d,%d\n" % (row[0], row[1]))
+            out.write("%s,%s,1\n" % (row[0], row[1]))
     return data_list
     
 
