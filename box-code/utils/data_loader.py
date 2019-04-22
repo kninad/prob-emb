@@ -111,6 +111,7 @@ def read_data_sets(FLAGS, dtype=tf.float32):
 
     # if embeddings are initialized using pre trained model, then read them in
     if FLAGS.init_embedding == 'pre_train':
+        print("Loading pre-trained model from file:", FLAGS.init_embedding_file)
         trained_model = pickle.load(open(FLAGS.init_embedding_file, "rb"))
         # min_embed = trained_model['embeddings']
         # delta_embed = trained_model['imag_embeddings']
