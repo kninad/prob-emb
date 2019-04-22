@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 
-def get_data_list(data_filepath, prob_threshold, outFile = "output.txt"):
+def get_data_list(data_filepath, prob_threshold, outFile="output.txt"):
     """Function to create a list of training tuples. It is according
     to the training data format specified for the poincare model.
     
@@ -14,6 +14,8 @@ def get_data_list(data_filepath, prob_threshold, outFile = "output.txt"):
     prob_threshold : float
         threshold for the conditional probability. Only pairs having 
         prob greater than this will be considered.
+    outFile : str
+        File name to which output the modified training file
     
     Returns
     -------
