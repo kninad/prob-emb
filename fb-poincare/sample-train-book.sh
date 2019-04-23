@@ -14,7 +14,9 @@ lr=0.1
 
 epochs=3
 negs=50
-burnin=5
+burnin=1
+batchsize=512
+eval_each=1
 train_threads=4
 gpu=-1
 
@@ -38,6 +40,7 @@ python3 embed.py \
        -epochs ${epochs} \
        -negs ${negs} \
        -burnin ${burnin} \
+       -train_threads ${train_threads} \
        -gpu ${gpu} \
        -dset "./data/book_data/${trn_file}" \
        -logfolder ${logpath} \
@@ -45,28 +48,6 @@ python3 embed.py \
        -fresh \
        -sparse \
        -manifold poincare
-#source deactivate
-
-#runFile="run_${trn_folder}_${COUNTER}.sh"
-#touch ${runFile}
-
-#echo "#!/bin/bash" > ${runFile}
-#echo "source activate tfcpu-py27" >> ${runFile}
-#echo "python experiments/trainer.py \\" >> ${runFile}
-#echo "--train_dir='./data/book_data/${trn_folder}/' \\" >> ${runFile}
-#echo "--r1=${r1} --w1=${w1} --w2=${w2} \\" >> ${runFile}
-#echo "--learning_rate=${learning_rate} --embed_dim=${embed_dim} \\" >> ${runFile}
-
-#echo "--train_file='genre_genre_master.txt' --train_test_file='genre_genre_eval.txt' \\" 
-#echo "--max_steps=1500 --batch_size=512 --print_every=1000 --useLossKL=True" >> ${runFile}
-
-## echo "--init_embedding='pre_train' \\" >> ${runFile}
-## echo "--max_steps=100000 --batch_size=512 --print_every=1000 --useLossKL=True" >> ${runFile}
-
-##echo "source deactivate tfcpu-py27" >> ${runFile}
-##cat ${runFile}
-#sbatch --partition titanx-short --mem 30000 --gres=gpu:1 ${runFile}
-#echo ""
 
 
 
