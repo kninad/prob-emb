@@ -119,12 +119,20 @@ def main():
     parser.add_argument('-lr_type', choices=['scale', 'constant'], default='constant')
     parser.add_argument('-train_threads', type=int, default=1,
                         help='Number of threads to use in training')
+
+    parser.add_argument('-logfolder', type=str, default='./log/',
+                        help='Path of log folder with a back slash')
+
+
+
+
     opt = parser.parse_args()
 
     # setup debugging and logigng
+    log_file = opt.logfolder + "logging.txt"
     log_level = logging.DEBUG if opt.debug else logging.INFO
     log = logging.getLogger('lorentz')
-    logging.basicConfig(level=log_level, format='%(message)s', stream=sys.stdout)
+    logging.basicConfig(level=log_level, format='%(message)s', filename=log_file)
 
     if opt.gpu >= 0 and opt.train_threads > 1:
         opt.gpu = -1

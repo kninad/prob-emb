@@ -39,7 +39,7 @@ def get_data_list(data_filepath, prob_threshold):
     return data_list
     
 
-def get_mod_data(data_filepath, prob_threshold=0.01):
+def write_mod_data(data_filepath, prob_threshold=0.01):
     """Function to create a list of training tuples. It is according
     to the training data format specified for the poincare model.
     
