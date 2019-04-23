@@ -40,14 +40,15 @@ def dict_for_logfolder(experiment_folder, glob_resdict):
     return
 
 code_root = '/home/ninad/Desktop/Link-to-sem4/dsis/ninad_gypsum/'
-logfolder = code_root + 'log/' 
+#logfolder = code_root + 'log/' 
+logfolder = code_root + 'holding/' 
 
 glob_dict = {}
 for exp_dir in os.listdir(logfolder):
     exp_folder = logfolder + exp_dir + os.sep    
     dict_for_logfolder(exp_folder, glob_dict)
 
-dict_file = org_root + 'final_results_comp.txt'
+dict_file = code_root + 'final_results_comp_run3.txt'
 
 with open(dict_file, "w") as wfile:
     wfile.write("Results:\n\n")
