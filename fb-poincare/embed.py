@@ -83,13 +83,13 @@ def main():
                         help='Dataset identifier')
     parser.add_argument('-dim', type=int, default=20,
                         help='Embedding dimension')
-    parser.add_argument('-manifold', type=str, default='lorentz',
+    parser.add_argument('-manifold', type=str, default='poincare',
                         choices=MANIFOLDS.keys(), help='Embedding manifold')
     parser.add_argument('-lr', type=float, default=1000,
                         help='Learning rate')
     parser.add_argument('-epochs', type=int, default=100,
                         help='Number of epochs')
-    parser.add_argument('-batchsize', type=int, default=12800,
+    parser.add_argument('-batchsize', type=int, default=512,
                         help='Batchsize')
     parser.add_argument('-negs', type=int, default=50,
                         help='Number of negatives')
@@ -97,7 +97,7 @@ def main():
                         help='Epochs of burn in')
     parser.add_argument('-dampening', type=float, default=0.75,
                         help='Sample dampening during burnin')
-    parser.add_argument('-ndproc', type=int, default=8,
+    parser.add_argument('-ndproc', type=int, default=4,
                         help='Number of data loading processes')
     parser.add_argument('-eval_each', type=int, default=1,
                         help='Run evaluation every n-th epoch')
@@ -122,9 +122,6 @@ def main():
 
     parser.add_argument('-logfolder', type=str, default='./log/',
                         help='Path of log folder with a back slash')
-
-
-
 
     opt = parser.parse_args()
 
