@@ -1,20 +1,22 @@
 #!/bin/sh
 
 COUNTER=0
-trn_folder="exp2.2_int_taxo"    # for use in exp_name
-trn_file="exp2.2_int_taxo/book_train_hb.csv"    # for dset arg param 
+trn_folder="book_small"
+trn_file="book_small/book_train_hb.csv"
+#trn_folder="exp2.2_int_taxo"    # for use in exp_name
+#trn_file="exp2.2_int_taxo/book_train_hb.csv"    # for dset arg param 
 
 #for dim in 30; do # emd dim
 #for lr in 0.1; do # learning_rate
 #done
 #done
 
-dim=30
+dim=10
 lr=0.1
 
-epochs=3
-negs=50
-burnin=1
+epochs=10000
+negs=20
+burnin=5
 batchsize=512
 eval_each=1
 train_threads=4
