@@ -5,16 +5,16 @@ COUNTER=0
 trn_folder="exp2.2_int_taxo"    # for use in exp_name
 trn_file="exp2.2_int_taxo/book_train_hb.csv"    # for dset arg param 
 
-for dim in 15 30 50; do # emd dim
-for lr in 0.001 0.01 0.1; do # learning_rate
+for dim in 10 15; do # emd dim
+for lr in 0.1 0.2 0.3; do # learning_rate
 
-epochs=100
+epochs=5000
 negs=50
 burnin=10
-batchsize=512
+batchsize=128
 eval_each=1
-train_threads=8
-gpu=0   # -1 means no gpu
+train_threads=24
+gpu=-1   # -1 means no gpu
 
 
 echo "Submitting Job"
