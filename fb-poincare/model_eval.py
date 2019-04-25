@@ -9,17 +9,17 @@ from hype.euclidean import EuclideanManifold, TranseManifold
 from hype.poincare import PoincareManifold
 import pickle
 
-def get_model_embeddings(fname):
+def get_model_info(fname):
     chkpnt = torch.load(fname)
     dset = chkpnt['conf']['dset']
     if not os.path.exists(dset):
         raise ValueError("Can't find dset!")
     data_format = 'hdf5' if dset.endswith('.h5') else 'csv'
-    #dset = load_adjacency_matrix(dset, 'hdf5')
+    # dset = load_adjacency_matrix(dset, 'hdf5')
     dset = load_adjacency_matrix(dset, data_format)
     
     info_dict = {}    
-#    info_dict['dset'] = dset
+    # info_dict['dset'] = dset
     info_dict['idmap'] = dset['idmap']
     info_dict['embeddings'] = chkpnt['embeddings'].numpy()
     return info_dict
@@ -36,11 +36,57 @@ def distance(u, v, eps=1e-5):
     sqvnorm = np.clip(np.sum(v * v, axis=-1), 0, 1 - eps)
     sqdist = np.sum(np.power(u - v, 2), axis=-1)
     x = 2 * sqdist / ((1 - squnorm) * (1 - sqvnorm)) + 1
-    # arcosh
+    # arcosh calc
     tmp = np.sqrt(np.power(z, 2) - 1)
     return np.log(x + tmp)
 
+def score_func_isa(u, v, alpha=1000):
+    norm_u = np.linalg.norm(u, 2)
+    norm_v = np.linalg.norm(v, 2)    
+    tmp = 1 + alpha * (norm_v - norm_u)
+    return -1 * tmp * distance(u, v)
+    
+def score_func_rank(u, v, beta=1000):
+    norm_u = np.linalg.norm(u, 2)
+    norm_v = np.linalg.norm(v, 2)    
+    tmp = 1 + alpha * np.abs(norm_v - norm_u)
+    return -1 * tmp * distance(u, v)
 
+def compute_nn(ent_id, other_ids, info_dict, func='dist'):
+    vec = get_vector(ent_id, info_dict)
+    dists = []
+    for ent in other_ids:
+        vec_ot = get_vector(ent, info_dict)
+        if func == 'dist':
+            tmp_score = distance(vec, vec_ot)
+        elif func == 'isa':
+            tmp_score = score_func_isa(vec, vec_ot)
+        elif func == 'rank':
+            tmp_score = score_func_rank(vec, vec_ot)
+        dists.append(tmp_score)
+    
+    dists = np.asarray(dists)
+    sorted_ids = np.argsort(dists)    
+    return dists, sorted_ids
+
+def sort_by_norm(info_dict):
+    emb_mat = info_dict['embeddings']
+    imap = info_dict['idmap']
+    norms = np.linalg.norm(emb_mat, axis=1)
+    sorted_ids = np.argsort(norms)
+    
+    rev_imap = {}
+    for key, val in imap:
+        rev_imap[val] = key
+    
+    for i in range(len(sorted_ids)):
+        init_val = sorted_ids[i]
+        new_val = rev_imap[init_val]
+        # update
+        sorted_ids[i] = new_val
+     
+    return sorted_ids
+        
 
 def main():    
     np.random.seed(42)
@@ -50,7 +96,7 @@ def main():
     args = parser.parse_args()
     
     model_file = args.file
-    info_dict = get_model_embeddings(model_file)
+    info_dict = get_model_info(model_file)
     
 
 if __name__ == '__main__':
