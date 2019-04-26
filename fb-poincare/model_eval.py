@@ -37,7 +37,7 @@ def distance(u, v, eps=1e-5):
     sqdist = np.sum(np.power(u - v, 2), axis=-1)
     x = 2 * sqdist / ((1 - squnorm) * (1 - sqvnorm)) + 1
     # arcosh calc
-    tmp = np.sqrt(np.power(z, 2) - 1)
+    tmp = np.sqrt(np.power(x, 2) - 1)
     return np.log(x + tmp)
 
 def score_func_isa(u, v, alpha=1000):
@@ -46,13 +46,13 @@ def score_func_isa(u, v, alpha=1000):
     tmp = 1 + alpha * (norm_v - norm_u)
     return -1 * tmp * distance(u, v)
     
-def score_func_rank(u, v, beta=1000):
+def score_func_rank(u, v, beta=0.1):
     norm_u = np.linalg.norm(u, 2)
     norm_v = np.linalg.norm(v, 2)    
-    tmp = 1 + alpha * np.abs(norm_v - norm_u)
+    tmp = 1 + beta * np.abs(norm_v - norm_u)
     return -1 * tmp * distance(u, v)
 
-def compute_nn(ent_id, other_ids, info_dict, func='dist'):
+def compute_nn(ent_id, other_ids, info_dict, func='dist', alpha=1000, beta=0.1):
     vec = get_vector(ent_id, info_dict)
     dists = []
     for ent in other_ids:
@@ -60,9 +60,9 @@ def compute_nn(ent_id, other_ids, info_dict, func='dist'):
         if func == 'dist':
             tmp_score = distance(vec, vec_ot)
         elif func == 'isa':
-            tmp_score = score_func_isa(vec, vec_ot)
+            tmp_score = score_func_isa(vec, vec_ot, alpha)
         elif func == 'rank':
-            tmp_score = score_func_rank(vec, vec_ot)
+            tmp_score = score_func_rank(vec, vec_ot, beta)
         dists.append(tmp_score)
     
     dists = np.asarray(dists)
@@ -75,29 +75,30 @@ def sort_by_norm(info_dict):
     norms = np.linalg.norm(emb_mat, axis=1)
     sorted_ids = np.argsort(norms)
     
-    rev_imap = {}
+    rev_imap = {}   
     for key, val in imap:
         rev_imap[val] = key
     
     for i in range(len(sorted_ids)):
         init_val = sorted_ids[i]
         new_val = rev_imap[init_val]
-        # update
+        # update with the entity_id
         sorted_ids[i] = new_val
      
     return sorted_ids
         
 
-def main():    
-    np.random.seed(42)
+#def main():    
+#    np.random.seed(42)
 
-    parser = argparse.ArgumentParser(description='Process the model chkpnt path')
-    parser.add_argument('file', help='Path to checkpoint')
-    args = parser.parse_args()
-    
-    model_file = args.file
-    info_dict = get_model_info(model_file)
-    
+#    parser = argparse.ArgumentParser(description='Process the model chkpnt path')
+#    parser.add_argument('file', help='Path to checkpoint')
+#    args = parser.parse_args()
+#    
+#    model_file = args.file
+#    info_dict = get_model_info(model_file)
+#    
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+#    main()
+

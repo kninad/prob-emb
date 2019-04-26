@@ -19,7 +19,7 @@ import h5py
 from tqdm import tqdm
 
 
-    def load_adjacency_matrix(path, format='hdf5', symmetrize=False):
+def load_adjacency_matrix(path, format='hdf5', symmetrize=False):
     if format == 'hdf5':
         with h5py.File(path, 'r') as hf:
             return {
