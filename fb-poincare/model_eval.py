@@ -50,7 +50,7 @@ def score_func_rank(u, v, beta=0.1):
     norm_u = np.linalg.norm(u, 2)
     norm_v = np.linalg.norm(v, 2)    
     tmp = 1 + beta * np.abs(norm_v - norm_u)
-    return -1 * tmp * distance(u, v)
+    return tmp * distance(u, v)
 
 def compute_nn(ent_id, other_ids, info_dict, func='dist', alpha=1000, beta=0.1):
     vec = get_vector(ent_id, info_dict)
