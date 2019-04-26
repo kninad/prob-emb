@@ -40,6 +40,12 @@ def distance(u, v, eps=1e-5):
     tmp = np.sqrt(np.power(x, 2) - 1)
     return np.log(x + tmp)
 
+# just an added function
+def dist_norms(u, v):
+    norm_u = np.linalg.norm(u, 2)
+    norm_v = np.linalg.norm(v, 2)
+    return (norm_u - norm_v)
+
 def score_func_isa(u, v, alpha=1000):
     norm_u = np.linalg.norm(u, 2)
     norm_v = np.linalg.norm(v, 2)    
@@ -74,18 +80,21 @@ def sort_by_norm(info_dict):
     imap = info_dict['idmap']
     norms = np.linalg.norm(emb_mat, axis=1)
     sorted_ids = np.argsort(norms)
+#    sorted_ids = list(sorted_ids)
+    # smaller norms will be at the top of the heirarchy
     
     rev_imap = {}   
-    for key, val in imap:
+    for key, val in imap.items():
         rev_imap[val] = key
     
+    sorted_names = []
     for i in range(len(sorted_ids)):
         init_val = sorted_ids[i]
         new_val = rev_imap[init_val]
         # update with the entity_id
-        sorted_ids[i] = new_val
+        sorted_names.append(new_val)
      
-    return sorted_ids
+    return sorted_ids, sorted_names, norms
         
 
 #def main():    
